@@ -1,0 +1,43 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
+<!-- * * * * * * * to get started with your project! * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/">Sistema Nutricional</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/'" routerLinkActive="active">Inicio</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/pacientes'" routerLinkActive="active">Pacientes</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/evaluacion'" routerLinkActive="active">Evaluación</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/analisis'" routerLinkActive="active">Análisis Nutricional</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/seguimiento'" routerLinkActive="active">Seguimiento</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/contacto'" routerLinkActive="active">Contacto</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container mt-4">
+  <router-outlet></router-outlet>
+</div>
+<footer class="bg-dark text-white text-center py-3 mt-5 fixed-bottom">
+  <div class="container">
+    <small>&copy; 2025 Sistema Nutricional. Todos los derechos reservados.</small>
+  </div>
+</footer>
+
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
