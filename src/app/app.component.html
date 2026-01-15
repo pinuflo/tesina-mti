@@ -14,7 +14,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" [routerLink]="'/'" routerLinkActive="active">Inicio</a></li>
         <li class="nav-item"><a class="nav-link" [routerLink]="'/pacientes'" routerLinkActive="active">Pacientes</a></li>
         <li class="nav-item"><a class="nav-link" [routerLink]="'/evaluacion'" routerLinkActive="active">Evaluación</a></li>
@@ -22,6 +22,22 @@
         <li class="nav-item"><a class="nav-link" [routerLink]="'/seguimiento'" routerLinkActive="active">Seguimiento</a></li>
         <li class="nav-item"><a class="nav-link" [routerLink]="'/contacto'" routerLinkActive="active">Contacto</a></li>
       </ul>
+      <div class="navbar-nav ms-auto">
+        <div class="nav-item dropdown">
+          <span class="navbar-text me-2">
+            <i class="fas fa-robot" *ngIf="isAIEnabled"></i>
+            <i class="fas fa-user" *ngIf="!isAIEnabled"></i>
+            Modo:
+          </span>
+          <select class="form-select form-select-sm" 
+                  [value]="currentVersion" 
+                  (change)="onVersionChange($event)"
+                  style="width: auto; display: inline-block;">
+            <option value="sin-ia">Sin IA</option>
+            <option value="con-ia">Con IA</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 </nav>

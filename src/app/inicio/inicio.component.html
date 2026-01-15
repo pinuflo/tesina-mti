@@ -1,2 +1,152 @@
-<h1>Bienvenido al Sistema Nutricional</h1>
-<p>Este es un mockup para validar el flujo de gestión y evaluación de pacientes.</p>
+<div class="container mt-4">
+  <div class="jumbotron bg-light p-5 rounded">
+    <div class="text-center">
+      <h1 class="display-4">
+        <i class="fas fa-heartbeat text-primary me-3"></i>
+        Sistema Nutricional Profesional
+      </h1>
+      <p class="lead">Herramienta profesional para nutricionistas con dos modalidades de trabajo</p>
+      
+      <!-- Indicador de versión actual -->
+      <div class="alert alert-info mt-4" role="alert">
+        <h5 class="alert-heading">
+          <i class="fas fa-info-circle me-2"></i>
+          Modalidad Actual: 
+          <span class="badge" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
+            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
+          </span>
+        </h5>
+        <p class="mb-0">Utiliza el dropdown en la barra superior para cambiar entre "Sin IA" y "Con IA"</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-user me-2"></i>
+            Modalidad Sin IA
+          </h5>
+        </div>
+        <div class="card-body">
+          <h6 class="card-title">Trabajo Tradicional</h6>
+          <ul class="list-unstyled">
+            <li><i class="fas fa-check-circle text-success me-2"></i>Cálculos nutricionales manuales</li>
+            <li><i class="fas fa-check-circle text-success me-2"></i>Control total del profesional</li>
+            <li><i class="fas fa-check-circle text-success me-2"></i>Proceso paso a paso</li>
+            <li><i class="fas fa-check-circle text-success me-2"></i>Recomendaciones generales</li>
+            <li><i class="fas fa-check-circle text-success me-2"></i>Gestión manual de pautas</li>
+          </ul>
+          <p class="card-text text-muted">
+            Ideal para profesionales que prefieren el control total sobre cada aspecto de la evaluación nutricional.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card h-100 border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-robot me-2"></i>
+            Modalidad Con IA
+          </h5>
+        </div>
+        <div class="card-body">
+          <h6 class="card-title">Asistencia Inteligente</h6>
+          <ul class="list-unstyled">
+            <li><i class="fas fa-magic text-primary me-2"></i>Análisis automatizado avanzado</li>
+            <li><i class="fas fa-magic text-primary me-2"></i>Recomendaciones personalizadas</li>
+            <li><i class="fas fa-magic text-primary me-2"></i>Generación automática de menús</li>
+            <li><i class="fas fa-magic text-primary me-2"></i>Predicción de resultados</li>
+            <li><i class="fas fa-magic text-primary me-2"></i>Optimización continua</li>
+          </ul>
+          <p class="card-text text-muted">
+            Acelera tu trabajo con herramientas inteligentes que asisten en la creación de pautas nutricionales.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-route me-2"></i>
+            Flujo de Trabajo
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-2">
+              <div class="step-item">
+                <div class="step-icon bg-primary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                  <i class="fas fa-users"></i>
+                </div>
+                <h6>1. Pacientes</h6>
+                <p class="text-muted small">Gestionar información de pacientes</p>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="step-item">
+                <div class="step-icon bg-success text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h6>2. Evaluación</h6>
+                <p class="text-muted small">Evaluar estado nutricional</p>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="step-item">
+                <div class="step-icon bg-warning text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                  <i class="fas fa-chart-pie"></i>
+                </div>
+                <h6>3. Análisis</h6>
+                <p class="text-muted small">Analizar datos nutricionales</p>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="step-item">
+                <div class="step-icon bg-info text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                  <i class="fas fa-calendar-check"></i>
+                </div>
+                <h6>4. Seguimiento</h6>
+                <p class="text-muted small">Monitorear progreso</p>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="step-item">
+                <div class="step-icon bg-secondary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <h6>5. Contacto</h6>
+                <p class="text-muted small">Comunicación y soporte</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5 mb-5">
+    <div class="col-12 text-center">
+      <h3>¿Listo para comenzar?</h3>
+      <p class="text-muted">Selecciona una modalidad y comienza a trabajar con tus pacientes</p>
+      <div class="btn-group" role="group">
+        <a routerLink="/pacientes" class="btn btn-primary">
+          <i class="fas fa-users me-2"></i>
+          Gestionar Pacientes
+        </a>
+        <a routerLink="/evaluacion" class="btn btn-success">
+          <i class="fas fa-clipboard-list me-2"></i>
+          Nueva Evaluación
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

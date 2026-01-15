@@ -1,8 +1,324 @@
-<h2>Seguimiento y Reportes</h2>
-<table class="table table-striped">
-  <thead><tr><th>Fecha</th><th>Peso</th><th>IMC</th><th>Observaciones</th></tr></thead>
-  <tbody>
-    <tr><td>2025-05-01</td><td>70</td><td>24.2</td><td>Sin cambios</td></tr>
-    <tr><td>2025-04-01</td><td>71</td><td>24.6</td><td>Leve descenso</td></tr>
-  </tbody>
-</table>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+          <i class="fas fa-chart-line me-2"></i>
+          Seguimiento y Historial
+          <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
+            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
+          </span>
+        </h2>
+        <div class="btn-group">
+          <button *ngIf="isAIEnabled && pacienteSeleccionado" 
+                  class="btn btn-primary" 
+                  (click)="generarSugerenciaIA()">
+            <i class="fas fa-robot me-1"></i>
+            Sugerencia IA
+          </button>
+          <button *ngIf="pacienteSeleccionado" 
+                  class="btn btn-success" 
+                  (click)="agregarSeguimiento()">
+            <i class="fas fa-plus me-1"></i>
+            Nuevo Seguimiento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de paciente -->
+  <div class="row mb-4" *ngIf="!pacienteSeleccionado">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5>Seleccionar Paciente</h5>
+          <select class="form-select" (change)="seleccionarPaciente($any($event.target).value)">
+            <option value="">-- Seleccione un paciente para ver su historial --</option>
+            <option *ngFor="let p of pacientes" [value]="p.id">
+              {{ p.nombre }} {{ p.apellido }} ({{ p.edad }} años)
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard del paciente seleccionado -->
+  <div *ngIf="pacienteSeleccionado">
+    <!-- Información del paciente -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h4>{{ pacienteSeleccionado.nombre }} {{ pacienteSeleccionado.apellido }}</h4>
+                <p class="text-muted mb-0">
+                  {{ pacienteSeleccionado.edad }} años • {{ pacienteSeleccionado.email }} • 
+                  Registrado: {{ pacienteSeleccionado.fechaRegistro | date:'dd/MM/yyyy' }}
+                </p>
+              </div>
+              <button class="btn btn-outline-secondary" (click)="pacienteSeleccionado = null">
+                <i class="fas fa-times me-1"></i>
+                Cambiar Paciente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas resumidas -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <i class="fas fa-clipboard-list fa-2x text-primary mb-2"></i>
+            <h4>{{ registros.length }}</h4>
+            <p class="text-muted">Consultas Totales</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <i class="fas fa-weight fa-2x text-success mb-2"></i>
+            <h4>{{ registros.length > 0 ? registros[0].peso + ' kg' : 'N/A' }}</h4>
+            <p class="text-muted">Peso Actual</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <i class="fas fa-smile fa-2x text-warning mb-2"></i>
+            <h4>{{ getPromedioSatisfaccion().toFixed(1) }}/5</h4>
+            <p class="text-muted">Satisfacción Promedio</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <i class="fas fa-tasks fa-2x text-info mb-2"></i>
+            <h4>{{ getPromedioCumplimiento().toFixed(0) }}%</h4>
+            <p class="text-muted">Cumplimiento Promedio</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs para diferentes vistas -->
+    <div class="row">
+      <div class="col-12">
+        <ul class="nav nav-tabs" id="historialTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="consultas-tab" data-bs-toggle="tab" data-bs-target="#consultas" type="button" role="tab">
+              <i class="fas fa-clipboard-list me-1"></i>
+              Consultas Nutricionales
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="seguimientos-tab" data-bs-toggle="tab" data-bs-target="#seguimientos" type="button" role="tab">
+              <i class="fas fa-chart-bar me-1"></i>
+              Seguimientos Mensuales
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pautas-tab" data-bs-toggle="tab" data-bs-target="#pautas" type="button" role="tab">
+              <i class="fas fa-utensils me-1"></i>
+              Pautas Nutricionales
+            </button>
+          </li>
+        </ul>
+        
+        <div class="tab-content" id="historialTabsContent">
+          <!-- Tab de Consultas -->
+          <div class="tab-pane fade show active" id="consultas" role="tabpanel">
+            <div class="card border-top-0">
+              <div class="card-body">
+                <h5>Historial de Consultas Nutricionales</h5>
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Peso</th>
+                        <th>IMC</th>
+                        <th>Objetivo</th>
+                        <th>Calorías</th>
+                        <th>Macros (P/C/G)</th>
+                        <th>Método</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let registro of registros">
+                        <td>{{ registro.fecha | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ registro.peso }} kg</td>
+                        <td>{{ (registro.peso / ((registro.altura/100) * (registro.altura/100))).toFixed(1) }}</td>
+                        <td>
+                          <span class="badge" [class]="
+                            registro.objetivo === 'perder' ? 'bg-warning' :
+                            registro.objetivo === 'ganar' ? 'bg-success' : 'bg-info'
+                          ">
+                            {{ registro.objetivo | titlecase }} peso
+                          </span>
+                        </td>
+                        <td>{{ registro.calorias }} kcal</td>
+                        <td class="small">
+                          P: {{ registro.proteinas }}g<br>
+                          C: {{ registro.carbohidratos }}g<br>
+                          G: {{ registro.grasas }}g
+                        </td>
+                        <td>
+                          <span class="badge" [class]="registro.createdWith === 'con-ia' ? 'bg-primary' : 'bg-secondary'">
+                            {{ registro.createdWith === 'con-ia' ? 'Con IA' : 'Sin IA' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div *ngIf="registros.length === 0" class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay consultas registradas para este paciente</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab de Seguimientos -->
+          <div class="tab-pane fade" id="seguimientos" role="tabpanel">
+            <div class="card border-top-0">
+              <div class="card-body">
+                <h5>Seguimientos Mensuales</h5>
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Mes/Año</th>
+                        <th>Peso Inicial</th>
+                        <th>Peso Final</th>
+                        <th>Cambio</th>
+                        <th>Cumplimiento Dieta</th>
+                        <th>Cumplimiento Ejercicio</th>
+                        <th>Satisfacción</th>
+                        <th>Observaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let seguimiento of seguimientos">
+                        <td>{{ seguimiento.mes }}/{{ seguimiento['año'] }}</td>
+                        <td>{{ seguimiento.pesoInicial.toFixed(1) }} kg</td>
+                        <td>{{ seguimiento.pesoFinal.toFixed(1) }} kg</td>
+                        <td>
+                          <span class="badge" [class]="
+                            (seguimiento.pesoFinal - seguimiento.pesoInicial) < 0 ? 'bg-success' :
+                            (seguimiento.pesoFinal - seguimiento.pesoInicial) > 0 ? 'bg-warning' : 'bg-info'
+                          ">
+                            {{ (seguimiento.pesoFinal - seguimiento.pesoInicial) > 0 ? '+' : '' }}{{ (seguimiento.pesoFinal - seguimiento.pesoInicial).toFixed(1) }} kg
+                          </span>
+                        </td>
+                        <td>
+                          <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" 
+                                 [style.width.%]="seguimiento.cumplimientoDieta"
+                                 [class]="seguimiento.cumplimientoDieta >= 80 ? 'bg-success' : seguimiento.cumplimientoDieta >= 60 ? 'bg-warning' : 'bg-danger'">
+                              {{ seguimiento.cumplimientoDieta }}%
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" 
+                                 [style.width.%]="seguimiento.cumplimientoEjercicio"
+                                 [class]="seguimiento.cumplimientoEjercicio >= 80 ? 'bg-success' : seguimiento.cumplimientoEjercicio >= 60 ? 'bg-warning' : 'bg-danger'">
+                              {{ seguimiento.cumplimientoEjercicio }}%
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="text-center">
+                            <span *ngFor="let star of [1,2,3,4,5]" 
+                                  [class]="star <= seguimiento.satisfaccion ? 'fas fa-star text-warning' : 'far fa-star text-muted'">
+                            </span>
+                          </div>
+                        </td>
+                        <td class="small">{{ seguimiento.observaciones }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div *ngIf="seguimientos.length === 0" class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay seguimientos registrados para este paciente</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab de Pautas -->
+          <div class="tab-pane fade" id="pautas" role="tabpanel">
+            <div class="card border-top-0">
+              <div class="card-body">
+                <h5>Pautas Nutricionales</h5>
+                <div class="row">
+                  <div class="col-md-6" *ngFor="let pauta of pautas">
+                    <div class="card mb-3">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>{{ pauta.fecha | date:'dd/MM/yyyy' }}</span>
+                        <span class="badge" [class]="pauta.createdWith === 'con-ia' ? 'bg-primary' : 'bg-secondary'">
+                          {{ pauta.createdWith === 'con-ia' ? 'Con IA' : 'Sin IA' }}
+                        </span>
+                      </div>
+                      <div class="card-body">
+                        <div class="row text-center mb-3">
+                          <div class="col-3">
+                            <small class="text-muted">Calorías</small>
+                            <div class="fw-bold">{{ pauta.calorias }}</div>
+                          </div>
+                          <div class="col-3">
+                            <small class="text-muted">Proteínas</small>
+                            <div class="fw-bold">{{ pauta.proteinas }}g</div>
+                          </div>
+                          <div class="col-3">
+                            <small class="text-muted">Carbohidratos</small>
+                            <div class="fw-bold">{{ pauta.carbohidratos }}g</div>
+                          </div>
+                          <div class="col-3">
+                            <small class="text-muted">Grasas</small>
+                            <div class="fw-bold">{{ pauta.grasas }}g</div>
+                          </div>
+                        </div>
+                        
+                        <div *ngIf="pauta.menu && pauta.menu.length > 0">
+                          <h6>Menú Sugerido:</h6>
+                          <ul class="small">
+                            <li *ngFor="let comida of pauta.menu">{{ comida }}</li>
+                          </ul>
+                        </div>
+                        
+                        <div class="small text-muted mt-2">
+                          {{ pauta.recomendaciones.substring(0, 100) }}...
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="pautas.length === 0" class="text-center py-4">
+                  <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">No hay pautas nutricionales registradas para este paciente</p>
+                  <a [routerLink]="['/evaluacion']" [queryParams]="{ pacienteId: pacienteSeleccionado.id }" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Crear Primera Pauta
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

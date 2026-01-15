@@ -1,11 +1,219 @@
-<h2>Gestión de Pacientes</h2>
-<button class="btn btn-success mb-2">Registrar Paciente</button>
-<table class="table table-bordered">
-  <thead>
-    <tr><th>Nombre</th><th>Edad</th><th>Género</th><th>Acciones</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>María López</td><td>34</td><td>Femenino</td><td><button class="btn btn-primary btn-sm">Evaluar</button></td></tr>
-    <tr><td>Carlos Ruiz</td><td>28</td><td>Masculino</td><td><button class="btn btn-primary btn-sm">Evaluar</button></td></tr>
-  </tbody>
-</table>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+          <i class="fas fa-users me-2"></i>
+          Gestión de Pacientes
+          <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
+            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
+          </span>
+        </h2>
+        <button class="btn btn-success" (click)="toggleAddForm()">
+          <i class="fas fa-user-plus me-2"></i>
+          {{ showAddForm ? 'Cancelar' : 'Agregar Paciente' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario para agregar paciente -->
+  <div class="row mb-4" *ngIf="showAddForm">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-user-plus me-2"></i>
+            Nuevo Paciente
+          </h5>
+        </div>
+        <div class="card-body">
+          <form class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nombre</label>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoPaciente.nombre"
+                     name="nombre"
+                     placeholder="Ingrese el nombre">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Apellido</label>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoPaciente.apellido"
+                     name="apellido"
+                     placeholder="Ingrese el apellido">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Edad</label>
+              <input type="number" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoPaciente.edad"
+                     name="edad"
+                     placeholder="30">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Teléfono</label>
+              <input type="tel" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoPaciente.telefono"
+                     name="telefono"
+                     placeholder="+56 9 1234 5678">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Email</label>
+              <input type="email" 
+                     class="form-control" 
+                     [(ngModel)]="nuevoPaciente.email"
+                     name="email"
+                     placeholder="paciente@email.com">
+            </div>
+            <div class="col-12">
+              <button type="button" 
+                      class="btn btn-primary me-2"
+                      (click)="agregarPaciente()">
+                <i class="fas fa-save me-2"></i>
+                Guardar Paciente
+              </button>
+              <button type="button" 
+                      class="btn btn-secondary"
+                      (click)="toggleAddForm()">
+                <i class="fas fa-times me-2"></i>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de pacientes -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Lista de Pacientes ({{ pacientes.length }})
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Paciente</th>
+                  <th>Contacto</th>
+                  <th>Edad</th>
+                  <th>Estado</th>
+                  <th>Historial</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let paciente of pacientes; let i = index">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                          {{ paciente.nombre.charAt(0) }}{{ paciente.apellido.charAt(0) }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="fw-bold">{{ paciente.nombre }} {{ paciente.apellido }}</div>
+                        <small class="text-muted">Registrado: {{ paciente.fechaRegistro | date:'dd/MM/yyyy' }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <i class="fas fa-phone me-1"></i>{{ paciente.telefono }}
+                    </div>
+                    <div>
+                      <i class="fas fa-envelope me-1"></i>{{ paciente.email }}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">{{ paciente.edad }} años</span>
+                  </td>
+                  <td>
+                    <span class="badge" [class]="paciente.activo ? 'bg-success' : 'bg-secondary'">
+                      {{ paciente.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="small">
+                      <div><strong>{{ getHistorialPaciente(paciente.id).totalConsultas }}</strong> consultas</div>
+                      <div *ngIf="getHistorialPaciente(paciente.id).ultimaConsulta">
+                        Última: {{ getHistorialPaciente(paciente.id).ultimaConsulta | date:'dd/MM/yyyy' }}
+                      </div>
+                      <div *ngIf="getHistorialPaciente(paciente.id).promedioSatisfaccion > 0">
+                        Satisfacción: {{ getHistorialPaciente(paciente.id).promedioSatisfaccion.toFixed(1) }}/5
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="btn-group-vertical btn-group-sm" role="group">
+                      <a [routerLink]="['/evaluacion']" 
+                         [queryParams]="{ pacienteId: paciente.id }"
+                         class="btn btn-primary btn-sm">
+                        <i class="fas fa-clipboard-list me-1"></i>
+                        Evaluar
+                      </a>
+                      <a [routerLink]="['/seguimiento']" 
+                         [queryParams]="{ pacienteId: paciente.id }"
+                         class="btn btn-info btn-sm">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Historial
+                      </a>
+                      <button *ngIf="isAIEnabled" 
+                              class="btn btn-warning btn-sm"
+                              (click)="sugerirProximaPauta(paciente.id)">
+                        <i class="fas fa-robot me-1"></i>
+                        Sugerir IA
+                      </button>
+                      <button class="btn btn-outline-secondary btn-sm"
+                              (click)="toggleEstadoPaciente(paciente)">
+                        <i [class]="paciente.activo ? 'fas fa-pause' : 'fas fa-play'" class="me-1"></i>
+                        {{ paciente.activo ? 'Pausar' : 'Activar' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div *ngIf="pacientes.length === 0" class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No hay pacientes registrados</p>
+            <button class="btn btn-success" (click)="toggleAddForm()">
+              <i class="fas fa-user-plus me-2"></i>
+              Agregar Primer Paciente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información sobre funcionalidades IA -->
+  <div class="row mt-4" *ngIf="isAIEnabled">
+    <div class="col-12">
+      <div class="alert alert-primary" role="alert">
+        <h6 class="alert-heading">
+          <i class="fas fa-robot me-2"></i>
+          Funcionalidades con IA Activadas
+        </h6>
+        <ul class="mb-0">
+          <li><strong>Sugerencias Personalizadas:</strong> Genera recomendaciones basadas en el historial del paciente</li>
+          <li><strong>Análisis Predictivo:</strong> Predice resultados futuros basado en patrones de comportamiento</li>
+          <li><strong>Optimización Automática:</strong> Ajusta pautas nutricionales según el progreso del paciente</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

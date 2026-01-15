@@ -1,22 +1,264 @@
-<h2>Evaluación de Paciente</h2>
-<form class="row g-3">
-  <div class="col-md-4">
-    <label class="form-label">Peso (kg)</label>
-    <input type="number" class="form-control" value="70">
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+          <i class="fas fa-clipboard-list me-2"></i>
+          Evaluación Nutricional
+          <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
+            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
+          </span>
+        </h2>
+        <button *ngIf="isAIEnabled" 
+                class="btn btn-outline-primary" 
+                (click)="simularAnalisisIA()">
+          <i class="fas fa-robot me-1"></i>
+          Análisis con IA
+        </button>
+      </div>
+    </div>
   </div>
-  <div class="col-md-4">
-    <label class="form-label">Talla (cm)</label>
-    <input type="number" class="form-control" value="170">
+
+  <!-- Formulario de datos del paciente -->
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-user me-2"></i>
+            Datos del Paciente
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Selector de paciente -->
+          <div class="mb-3" *ngIf="!pacienteSeleccionado">
+            <label class="form-label">Seleccionar Paciente</label>
+            <select class="form-select" (change)="seleccionarPaciente(this.dataService.getPacienteById($any($event.target).value)!)">
+              <option value="">-- Seleccione un paciente --</option>
+              <option *ngFor="let p of pacientes" [value]="p.id">
+                {{ p.nombre }} {{ p.apellido }} ({{ p.edad }} años)
+              </option>
+            </select>
+          </div>
+
+          <!-- Información del paciente seleccionado -->
+          <div class="alert alert-info" *ngIf="pacienteSeleccionado">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ pacienteSeleccionado.nombre }} {{ pacienteSeleccionado.apellido }}</strong>
+                <br>
+                <small>{{ pacienteSeleccionado.edad }} años • {{ pacienteSeleccionado.email }}</small>
+              </div>
+              <button class="btn btn-sm btn-outline-info" (click)="verHistorialPaciente()">
+                <i class="fas fa-history me-1"></i>
+                Ver Historial
+              </button>
+            </div>
+          </div>
+
+          <form class="row g-3" *ngIf="pacienteSeleccionado">
+            <div class="col-12">
+              <label class="form-label">Nombre completo</label>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="paciente.nombre"
+                     name="nombre"
+                     readonly>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Edad (años)</label>
+              <input type="number" 
+                     class="form-control" 
+                     [(ngModel)]="paciente.edad"
+                     name="edad"
+                     placeholder="30">
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Peso (kg)</label>
+              <input type="number" 
+                     class="form-control" 
+                     [(ngModel)]="paciente.peso"
+                     name="peso"
+                     placeholder="70"
+                     step="0.1">
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label">Altura (cm)</label>
+              <input type="number" 
+                     class="form-control" 
+                     [(ngModel)]="paciente.altura"
+                     name="altura"
+                     placeholder="170">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Nivel de actividad</label>
+              <select class="form-select" 
+                      [(ngModel)]="paciente.actividad"
+                      name="actividad">
+                <option value="sedentario">Sedentario</option>
+                <option value="ligero">Actividad ligera</option>
+                <option value="moderado">Actividad moderada</option>
+                <option value="intenso">Actividad intensa</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Objetivo</label>
+              <select class="form-select" 
+                      [(ngModel)]="paciente.objetivo"
+                      name="objetivo">
+                <option value="perder">Perder peso</option>
+                <option value="mantener">Mantener peso</option>
+                <option value="ganar">Ganar peso</option>
+              </select>
+            </div>
+            
+            <div class="col-12">
+              <div class="d-grid gap-2">
+                <button type="button" 
+                        class="btn btn-primary"
+                        (click)="calcularPauta()"
+                        [disabled]="!pacienteSeleccionado">
+                  <i class="fas fa-calculator me-2"></i>
+                  {{ isAIEnabled ? 'Generar Pauta con IA' : 'Calcular Pauta' }}
+                </button>
+                <button type="button" 
+                        class="btn btn-success"
+                        (click)="guardarPauta()"
+                        [disabled]="pautaNutricional.calorias === 0">
+                  <i class="fas fa-save me-2"></i>
+                  Guardar Pauta y Continuar
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados de la pauta nutricional -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-pie me-2"></i>
+            Pauta Nutricional
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="pautaNutricional.calorias > 0; else noPauta">
+            <!-- Información calórica -->
+            <div class="row text-center mb-4">
+              <div class="col-3">
+                <div class="border rounded p-3">
+                  <h4 class="text-primary mb-0">{{ pautaNutricional.calorias }}</h4>
+                  <small class="text-muted">Calorías/día</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="border rounded p-3">
+                  <h4 class="text-success mb-0">{{ pautaNutricional.proteinas }}g</h4>
+                  <small class="text-muted">Proteínas</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="border rounded p-3">
+                  <h4 class="text-warning mb-0">{{ pautaNutricional.carbohidratos }}g</h4>
+                  <small class="text-muted">Carbohidratos</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="border rounded p-3">
+                  <h4 class="text-info mb-0">{{ pautaNutricional.grasas }}g</h4>
+                  <small class="text-muted">Grasas</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recomendaciones -->
+            <div class="alert" [class]="isAIEnabled ? 'alert-primary' : 'alert-info'">
+              <h6>
+                <i [class]="isAIEnabled ? 'fas fa-robot' : 'fas fa-lightbulb'" class="me-2"></i>
+                {{ isAIEnabled ? 'Recomendaciones IA' : 'Recomendaciones Generales' }}
+              </h6>
+              <pre class="mb-0" style="font-family: inherit; white-space: pre-wrap;">{{ pautaNutricional.recomendaciones }}</pre>
+            </div>
+
+            <!-- Herramientas adicionales con IA -->
+            <div *ngIf="isAIEnabled" class="mt-3">
+              <div class="d-grid gap-2">
+                <button class="btn btn-outline-success btn-sm">
+                  <i class="fas fa-utensils me-2"></i>
+                  Generar menú automático
+                </button>
+                <button class="btn btn-outline-info btn-sm">
+                  <i class="fas fa-shopping-cart me-2"></i>
+                  Lista de compras inteligente
+                </button>
+                <button class="btn btn-outline-warning btn-sm">
+                  <i class="fas fa-chart-line me-2"></i>
+                  Predicción de resultados
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noPauta>
+            <div class="text-center text-muted py-5">
+              <i class="fas fa-calculator fa-3x mb-3"></i>
+              <p>Complete los datos del paciente y presione "{{ isAIEnabled ? 'Generar Pauta con IA' : 'Calcular Pauta' }}" para ver los resultados.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="col-md-4">
-    <label class="form-label">IMC</label>
-    <input type="text" class="form-control" value="24.2" readonly>
+
+  <!-- Diferencias entre versiones -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Diferencias entre versiones
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-secondary">
+                <i class="fas fa-user me-2"></i>
+                Versión Sin IA
+              </h6>
+              <ul class="list-unstyled">
+                <li><i class="fas fa-check text-muted me-2"></i>Cálculos nutricionales básicos</li>
+                <li><i class="fas fa-check text-muted me-2"></i>Recomendaciones generales</li>
+                <li><i class="fas fa-check text-muted me-2"></i>Proceso manual paso a paso</li>
+                <li><i class="fas fa-check text-muted me-2"></i>Control total del profesional</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary">
+                <i class="fas fa-robot me-2"></i>
+                Versión Con IA
+              </h6>
+              <ul class="list-unstyled">
+                <li><i class="fas fa-check text-primary me-2"></i>Análisis automatizado avanzado</li>
+                <li><i class="fas fa-check text-primary me-2"></i>Recomendaciones personalizadas</li>
+                <li><i class="fas fa-check text-primary me-2"></i>Generación automática de menús</li>
+                <li><i class="fas fa-check text-primary me-2"></i>Predicción de resultados</li>
+                <li><i class="fas fa-check text-primary me-2"></i>Sugerencias en tiempo real</li>
+                <li><i class="fas fa-check text-primary me-2"></i>Optimización continua</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="col-12">
-    <label class="form-label">Historia Clínica</label>
-    <textarea class="form-control" rows="2">Sin antecedentes relevantes.</textarea>
-  </div>
-  <div class="col-12">
-    <button type="submit" class="btn btn-primary">Guardar Evaluación</button>
-  </div>
-</form>
+</div>

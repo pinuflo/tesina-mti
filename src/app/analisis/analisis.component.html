@@ -1,7 +1,235 @@
-<h2>Análisis Nutricional</h2>
-<ul class="list-group mb-3">
-  <li class="list-group-item">Requerimiento calórico estimado: <b>2100 kcal/día</b></li>
-  <li class="list-group-item">Diagnóstico nutricional: <b>Normopeso</b></li>
-  <li class="list-group-item">Plan alimentario sugerido: <b>Plan estándar 2100 kcal</b></li>
-</ul>
-<button class="btn btn-secondary">Ver Detalle del Plan</button>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+          <i class="fas fa-chart-pie me-2"></i>
+          Análisis Nutricional Global
+          <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
+            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
+          </span>
+        </h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas generales -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card text-center bg-primary text-white">
+        <div class="card-body">
+          <i class="fas fa-users fa-2x mb-2"></i>
+          <h4>{{ estadisticas.totalPacientes }}</h4>
+          <p class="mb-0">Pacientes Totales</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center bg-success text-white">
+        <div class="card-body">
+          <i class="fas fa-user-check fa-2x mb-2"></i>
+          <h4>{{ estadisticas.pacientesActivos }}</h4>
+          <p class="mb-0">Pacientes Activos</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center bg-info text-white">
+        <div class="card-body">
+          <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+          <h4>{{ estadisticas.totalConsultas }}</h4>
+          <p class="mb-0">Consultas Totales</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center bg-warning text-white">
+        <div class="card-body">
+          <i class="fas fa-weight fa-2x mb-2"></i>
+          <h4>{{ estadisticas.promedioIMC.toFixed(1) }}</h4>
+          <p class="mb-0">IMC Promedio</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center bg-primary text-white">
+        <div class="card-body">
+          <i class="fas fa-robot fa-2x mb-2"></i>
+          <h4>{{ estadisticas.consultasConIA }}</h4>
+          <p class="mb-0">Con IA</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center bg-secondary text-white">
+        <div class="card-body">
+          <i class="fas fa-user fa-2x mb-2"></i>
+          <h4>{{ estadisticas.consultasSinIA }}</h4>
+          <p class="mb-0">Sin IA</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis por objetivos -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-bullseye me-2"></i>
+            Objetivos Más Comunes
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let objetivo of getObjetivosMasComunes(); let i = index" class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold">{{ objetivo[0] | titlecase }} peso</span>
+              <span class="badge bg-primary">{{ objetivo[1] }} pacientes</span>
+            </div>
+            <div class="progress mt-1">
+              <div class="progress-bar" 
+                   [style.width.%]="(objetivo[1] / estadisticas.totalConsultas) * 100"
+                   [class]="i === 0 ? 'bg-success' : i === 1 ? 'bg-warning' : 'bg-info'">
+              </div>
+            </div>
+          </div>
+          <div *ngIf="getObjetivosMasComunes().length === 0" class="text-center py-3">
+            <i class="fas fa-chart-pie fa-2x text-muted mb-2"></i>
+            <p class="text-muted">No hay datos suficientes para analizar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-trophy me-2"></i>
+            Pacientes Más Activos
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let paciente of getPacientesMasActivos(); let i = index" class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <span class="fw-bold">{{ paciente.nombre }} {{ paciente.apellido }}</span>
+              <small class="text-muted d-block">{{ paciente.edad }} años</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success">{{ paciente.totalConsultas }} consultas</span>
+            </div>
+          </div>
+          <div *ngIf="getPacientesMasActivos().length === 0" class="text-center py-3">
+            <i class="fas fa-users fa-2x text-muted mb-2"></i>
+            <p class="text-muted">No hay pacientes con consultas registradas</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis según modo IA -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i [class]="isAIEnabled ? 'fas fa-robot' : 'fas fa-chart-bar'" class="me-2"></i>
+            {{ isAIEnabled ? 'Análisis Avanzado con IA' : 'Reporte Estadístico Básico' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="isAIEnabled; else basicAnalysis">
+            <div class="alert alert-primary" role="alert">
+              <h6 class="alert-heading">🤖 Insights Generados por IA</h6>
+              <ul class="mb-0">
+                <li><strong>Tendencia General:</strong> 
+                  <span *ngIf="estadisticas.promedioIMC < 18.5">Los pacientes tienden a estar por debajo del peso ideal</span>
+                  <span *ngIf="estadisticas.promedioIMC >= 18.5 && estadisticas.promedioIMC < 25">Los pacientes mantienen un peso saludable en promedio</span>
+                  <span *ngIf="estadisticas.promedioIMC >= 25">Los pacientes tienden al sobrepeso, requieren intervención nutricional</span>
+                </li>
+                <li><strong>Patrón de Consultas:</strong> 
+                  El {{ ((estadisticas.consultasConIA / estadisticas.totalConsultas) * 100).toFixed(0) }}% de las consultas utilizan IA
+                </li>
+                <li><strong>Recomendación:</strong> 
+                  <span *ngIf="estadisticas.consultasConIA < estadisticas.consultasSinIA">
+                    Considerar utilizar más las herramientas de IA para optimizar resultados
+                  </span>
+                  <span *ngIf="estadisticas.consultasConIA >= estadisticas.consultasSinIA">
+                    Excelente adopción de tecnologías de IA en el proceso nutricional
+                  </span>
+                </li>
+              </ul>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <i class="fas fa-brain fa-2x text-primary mb-2"></i>
+                    <h6>Predicción IA</h6>
+                    <p class="small">Basado en patrones actuales, se espera un 85% de éxito en objetivos nutricionales</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <i class="fas fa-target fa-2x text-success mb-2"></i>
+                    <h6>Optimización</h6>
+                    <p class="small">Los algoritmos de IA han optimizado las pautas en un 30% comparado con métodos tradicionales</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-2x text-warning mb-2"></i>
+                    <h6>Recomendación</h6>
+                    <p class="small">Se sugiere implementar seguimiento automatizado para mejorar adherencia</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #basicAnalysis>
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Resumen Estadístico</h6>
+                <ul class="list-unstyled">
+                  <li><strong>Total de Pacientes:</strong> {{ estadisticas.totalPacientes }}</li>
+                  <li><strong>Pacientes Activos:</strong> {{ estadisticas.pacientesActivos }}</li>
+                  <li><strong>Total de Consultas:</strong> {{ estadisticas.totalConsultas }}</li>
+                  <li><strong>IMC Promedio:</strong> {{ estadisticas.promedioIMC.toFixed(1) }} kg/m²</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Distribución de Métodos</h6>
+                <div class="mb-2">
+                  <small>Consultas Sin IA</small>
+                  <div class="progress">
+                    <div class="progress-bar bg-secondary" 
+                         [style.width.%]="estadisticas.totalConsultas > 0 ? (estadisticas.consultasSinIA / estadisticas.totalConsultas) * 100 : 0">
+                      {{ estadisticas.consultasSinIA }}
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <small>Consultas Con IA</small>
+                  <div class="progress">
+                    <div class="progress-bar bg-primary" 
+                         [style.width.%]="estadisticas.totalConsultas > 0 ? (estadisticas.consultasConIA / estadisticas.totalConsultas) * 100 : 0">
+                      {{ estadisticas.consultasConIA }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

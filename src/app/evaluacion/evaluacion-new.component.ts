@@ -40,7 +40,7 @@ export class EvaluacionComponent implements OnInit {
 
   constructor(
     private versionService: VersionService,
-    public dataService: DataService,
+    private dataService: DataService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
