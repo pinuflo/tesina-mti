@@ -3,6 +3,12 @@
 ## Objetivo general
 Definir, guiar y medir dos flujos diferenciados (Sin IA y Con IA) dentro del sistema para validar su impacto mediante métricas cuantitativas y cualitativas.
 
+## Escenario preconfigurado en el front (sin backend)
+- **Paciente Manual (Lucía Pérez)**: cuenta con historial previo y tiene asignado el flujo "Protocolo Manual (Sin IA)" con los dos primeros pasos ya registrados para evidenciar tiempos mayores y ausencia de autocompletado.
+- **Paciente Asistido (Diego Torres)**: llega sin historial y tiene asignado "Protocolo Asistido (Con IA)", donde los primeros pasos ya muestran tiempos reducidos y campos autocompletados por IA.
+- **Mismo resultado esperado**: ambos flujos apuntan al mismo objetivo final (pauta mediterránea de 1800 kcal con menú sugerido). Esto permite comparar cuánto tarda cada modalidad en alcanzar el mismo entregable.
+- Los datos se cargan desde `localStorage` mediante `DataService.createFakeData()` y los flujos se asignan automáticamente desde `WorkflowService.seedScenarioAssignments()`.
+
 ## 1. Plantillas de flujo prescrito
 - **Modelo `FlujoTrabajo`**: lista ordenada de pasos, criterios de éxito, tiempo estimado y tipo de modo (sin IA vs con IA).
 - **Catálogo de flujos**: pantalla para crear/editar plantillas (ej. "Protocolo Manual" y "Protocolo Asistido").

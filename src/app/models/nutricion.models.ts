@@ -1,3 +1,5 @@
+export type VersionMode = 'sin-ia' | 'con-ia';
+
 export interface Paciente {
   id: string;
   nombre: string;
@@ -7,6 +9,8 @@ export interface Paciente {
   email: string;
   fechaRegistro: Date;
   activo: boolean;
+  flujoActivoId?: string;
+  historialFlujos?: string[];
 }
 
 export interface RegistroNutricional {
@@ -23,7 +27,16 @@ export interface RegistroNutricional {
   grasas: number;
   recomendaciones: string;
   observaciones?: string;
-  createdWith: 'sin-ia' | 'con-ia';
+  createdWith: VersionMode;
+}
+
+export interface FlujoObjetivoFinal {
+  descripcion: string;
+  caloriasObjetivo: number;
+  proteinasObjetivo: number;
+  carbohidratosObjetivo: number;
+  grasasObjetivo: number;
+  menuSugerido: string[];
 }
 
 export interface SeguimientoMensual {
@@ -38,6 +51,7 @@ export interface SeguimientoMensual {
   satisfaccion: number; // 1-5
   observaciones: string;
   fecha: Date;
+  objetivoFinal?: FlujoObjetivoFinal;
 }
 
 export interface PautaNutricional {
@@ -50,7 +64,89 @@ export interface PautaNutricional {
   grasas: number;
   recomendaciones: string;
   menu?: string[];
+  objetivoFinal?: FlujoObjetivoFinal;
   observaciones?: string;
-  createdWith: 'sin-ia' | 'con-ia';
+  createdWith: VersionMode;
   basadoEnHistorial?: boolean;
+}
+
+export interface PasoFlujo {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  modulo: 'pacientes' | 'evaluacion' | 'analisis' | 'seguimiento';
+  orden: number;
+  modo: VersionMode | 'mixto';
+  requiereIA?: boolean;
+  checklist?: string[];
+  accionesIA?: string[];
+  estimacionMinutos?: number;
+}
+
+export interface FlujoTrabajo {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  modoObjetivo: VersionMode | 'comparativo';
+  pasos: PasoFlujo[];
+  tiempoEstimadoMin: number;
+  objetivos: string[];
+  activo: boolean;
+  objetivoFinal?: FlujoObjetivoFinal;
+}
+
+export interface WorkflowAccion {
+  tipo: 'manual' | 'ia';
+  descripcion: string;
+  timestamp: string;
+}
+
+export interface WorkflowLogEntry {
+  id: string;
+  pacienteId: string;
+  flujoId: string;
+  pasoId: string;
+  modo: VersionMode;
+  inicio: string;
+  fin?: string;
+  acciones: WorkflowAccion[];
+  facilidad?: number;
+  comentario?: string;
+  camposAutocompletados?: number;
+  camposManuales?: number;
+  tiempoMinutos?: number;
+}
+
+export interface PasoEjecucion {
+  pasoId: string;
+  logId: string;
+  inicio: string;
+  fin?: string;
+  tiempoMinutos?: number;
+  facilidad?: number;
+  comentarios?: string;
+  camposAutocompletados?: number;
+  camposManuales?: number;
+}
+
+export interface FlujoResultado {
+  tiempoTotalMin?: number;
+  facilidadPromedio?: number;
+  deltaPeso?: number;
+  satisfaccionPaciente?: number;
+  satisfaccionProfesional?: number;
+  observaciones?: string;
+}
+
+export interface FlujoAsignado {
+  id: string;
+  pacienteId: string;
+  flujoId: string;
+  modoEjecutado: VersionMode;
+  fechaAsignacion: string;
+  estado: 'pendiente' | 'en-progreso' | 'completado';
+  pasoActualId: string | null;
+  ejecucion: PasoEjecucion[];
+  resultado?: FlujoResultado;
+  objetivoFinal?: FlujoObjetivoFinal;
 }

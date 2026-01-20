@@ -232,4 +232,83 @@
       </div>
     </div>
   </div>
+
+  <div class="row mt-4">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-stopwatch me-2"></i>
+            Comparativa de flujos
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Modo</th>
+                  <th>Flujos completados</th>
+                  <th>Tiempo medio (min)</th>
+                  <th>Facilidad media (1-5)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sin IA</td>
+                  <td>{{ metricasFlujo.sinIA.total }}</td>
+                  <td>{{ metricasFlujo.sinIA.tiempoPromedio | number:'1.0-1' }}</td>
+                  <td>{{ metricasFlujo.sinIA.facilidadPromedio | number:'1.0-1' }}</td>
+                </tr>
+                <tr>
+                  <td>Con IA</td>
+                  <td>{{ metricasFlujo.conIA.total }}</td>
+                  <td>{{ metricasFlujo.conIA.tiempoPromedio | number:'1.0-1' }}</td>
+                  <td>{{ metricasFlujo.conIA.facilidadPromedio | number:'1.0-1' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <small class="text-muted">Datos basados en flujos completados y registrados mediante el panel guiado.</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-balance-scale me-2"></i>
+            Impacto de la IA frente al flujo manual
+          </h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-2">
+            <strong>Ahorro de tiempo estimado:</strong>
+            <span [class]="metricasFlujo.deltaTiempo > 0 ? 'text-success' : 'text-muted'">
+              {{ metricasFlujo.deltaTiempo | number:'1.0-1' }} min menos por flujo
+            </span>
+          </p>
+          <p class="mb-2">
+            <strong>Mejora en facilidad reportada:</strong>
+            <span [class]="metricasFlujo.deltaFacilidad > 0 ? 'text-success' : 'text-muted'">
+              +{{ metricasFlujo.deltaFacilidad | number:'1.0-1' }} pts
+            </span>
+          </p>
+          <div class="alert alert-info" *ngIf="flujosAsignados.length === 0">
+            Aún no hay flujos completados para comparar. Asigna un flujo desde Pacientes y regístralo en Evaluación/Seguimiento.
+          </div>
+          <div *ngIf="flujosAsignados.length > 0">
+            <h6>Últimos flujos registrados</h6>
+            <ul class="list-unstyled small mb-0">
+              <li *ngFor="let flujo of flujosAsignados | slice:0:4">
+                <i class="fas me-1" [ngClass]="flujo.modoEjecutado === 'con-ia' ? 'fa-robot text-primary' : 'fa-user text-secondary'"></i>
+                {{ getNombreFlujo(flujo.flujoId) }} • {{ flujo.estado | titlecase }} •
+                {{ flujo.resultado?.tiempoTotalMin ? (flujo.resultado?.tiempoTotalMin | number:'1.0-1') + ' min' : 'sin datos' }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

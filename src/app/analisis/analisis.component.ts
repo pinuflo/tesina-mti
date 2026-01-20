@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../services/data.service';
 import { VersionService } from '../services/version.service';
-import { Paciente, RegistroNutricional } from '../models/nutricion.models';
+import { WorkflowService } from '../services/workflow.service';
+import { Paciente, RegistroNutricional, FlujoAsignado } from '../models/nutricion.models';
 
 @Component({
   selector: 'app-analisis',
@@ -15,6 +16,7 @@ export class AnalisisComponent implements OnInit {
   isAIEnabled = false;
   pacientes: Paciente[] = [];
   registros: RegistroNutricional[] = [];
+  flujosAsignados: FlujoAsignado[] = [];
   estadisticas = {
     totalPacientes: 0,
     pacientesActivos: 0,
@@ -23,10 +25,17 @@ export class AnalisisComponent implements OnInit {
     consultasSinIA: 0,
     promedioIMC: 0
   };
+  metricasFlujo = {
+    sinIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0 },
+    conIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0 },
+    deltaTiempo: 0,
+    deltaFacilidad: 0
+  };
 
   constructor(
     private dataService: DataService,
-    private versionService: VersionService
+    private versionService: VersionService,
+    private workflowService: WorkflowService
   ) {}
 
   ngOnInit() {
@@ -42,6 +51,11 @@ export class AnalisisComponent implements OnInit {
     this.dataService.registros$.subscribe(registros => {
       this.registros = registros;
       this.calcularEstadisticas();
+    });
+
+    this.workflowService.asignaciones$.subscribe(asignaciones => {
+      this.flujosAsignados = asignaciones;
+      this.calcularMetricasFlujo();
     });
   }
 
@@ -79,5 +93,41 @@ export class AnalisisComponent implements OnInit {
       .slice(0, 5);
     
     return pacientesConConsultas;
+  }
+
+  getNombreFlujo(flujoId: string): string {
+    return this.workflowService.getFlujoById(flujoId)?.nombre ?? flujoId;
+  }
+
+  private calcularMetricasFlujo() {
+    const completados = this.flujosAsignados.filter(f => f.estado === 'completado' && f.resultado);
+
+    const construirMetricas = (modo: 'sin-ia' | 'con-ia') => {
+      const subset = completados.filter(f => f.modoEjecutado === modo);
+      const total = subset.length;
+      const tiempoPromedio = total > 0
+        ? subset.reduce((sum, f) => sum + (f.resultado?.tiempoTotalMin || 0), 0) / total
+        : 0;
+      const facilidadPromedio = total > 0
+        ? subset.reduce((sum, f) => sum + (f.resultado?.facilidadPromedio || 0), 0) / total
+        : 0;
+      return { total, tiempoPromedio, facilidadPromedio };
+    };
+
+    const sinIA = construirMetricas('sin-ia');
+    const conIA = construirMetricas('con-ia');
+    const deltaTiempo = sinIA.tiempoPromedio && conIA.tiempoPromedio
+      ? sinIA.tiempoPromedio - conIA.tiempoPromedio
+      : 0;
+    const deltaFacilidad = conIA.facilidadPromedio && sinIA.facilidadPromedio
+      ? conIA.facilidadPromedio - sinIA.facilidadPromedio
+      : 0;
+
+    this.metricasFlujo = {
+      sinIA,
+      conIA,
+      deltaTiempo,
+      deltaFacilidad
+    };
   }
 }

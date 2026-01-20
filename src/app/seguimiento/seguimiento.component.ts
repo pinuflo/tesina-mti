@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DataService } from '../services/data.service';
 import { VersionService } from '../services/version.service';
-import { Paciente, RegistroNutricional, SeguimientoMensual, PautaNutricional } from '../models/nutricion.models';
+import { Paciente, RegistroNutricional, SeguimientoMensual, PautaNutricional, FlujoAsignado, FlujoTrabajo, PasoFlujo } from '../models/nutricion.models';
+import { WorkflowService } from '../services/workflow.service';
 
 @Component({
   selector: 'app-seguimiento',
@@ -20,16 +21,28 @@ export class SeguimientoComponent implements OnInit {
   registros: RegistroNutricional[] = [];
   seguimientos: SeguimientoMensual[] = [];
   pautas: PautaNutricional[] = [];
+  flujoAsignado: FlujoAsignado | null = null;
+  flujoDetalle: FlujoTrabajo | null = null;
+  pasosFlujo: PasoFlujo[] = [];
+  pasoEnEjecucion: PasoFlujo | null = null;
+  feedbackPaso = {
+    facilidad: 3,
+    camposAutocompletados: 0,
+    camposManuales: 0,
+    comentarios: ''
+  };
   
   constructor(
     private dataService: DataService,
     private versionService: VersionService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private workflowService: WorkflowService
   ) {}
 
   ngOnInit() {
     this.versionService.version$.subscribe(version => {
       this.isAIEnabled = this.versionService.isAIEnabled();
+      this.prepararFeedbackBase();
     });
 
     this.dataService.pacientes$.subscribe(pacientes => {
@@ -55,6 +68,7 @@ export class SeguimientoComponent implements OnInit {
     if (pac) {
       this.pacienteSeleccionado = pac;
       this.cargarHistorial();
+      this.actualizarFlujoParaPaciente(pac.id);
     }
   }
 
@@ -112,6 +126,84 @@ export class SeguimientoComponent implements OnInit {
     
     this.dataService.addSeguimiento(seguimiento);
     this.cargarHistorial();
+    this.actualizarFlujoParaPaciente(this.pacienteSeleccionado.id);
     alert('✅ Seguimiento agregado exitosamente');
+  }
+
+  private actualizarFlujoParaPaciente(pacienteId: string) {
+    this.flujoAsignado = this.workflowService.getAsignacionActiva(pacienteId) || null;
+    if (this.flujoAsignado) {
+      this.flujoDetalle = this.workflowService.getFlujoById(this.flujoAsignado.flujoId) || null;
+      this.pasosFlujo = this.flujoDetalle ? [...this.flujoDetalle.pasos].sort((a, b) => a.orden - b.orden) : [];
+    } else {
+      this.flujoDetalle = null;
+      this.pasosFlujo = [];
+    }
+    this.actualizarPasoEnEjecucion();
+  }
+
+  private actualizarPasoEnEjecucion() {
+    if (!this.flujoAsignado || !this.pasosFlujo.length || this.flujoAsignado.estado === 'completado') {
+      this.pasoEnEjecucion = null;
+      return;
+    }
+
+    const pasoActual = this.pasosFlujo.find(p => p.id === this.flujoAsignado?.pasoActualId);
+    const pendiente = this.pasosFlujo.find(paso => !this.flujoAsignado!.ejecucion.some(e => e.pasoId === paso.id && e.fin));
+    this.pasoEnEjecucion = pasoActual || pendiente || null;
+    this.prepararFeedbackBase();
+  }
+
+  private prepararFeedbackBase() {
+    this.feedbackPaso = {
+      facilidad: this.isAIEnabled ? 4 : 3,
+      camposAutocompletados: this.isAIEnabled ? 5 : 0,
+      camposManuales: this.isAIEnabled ? 2 : 6,
+      comentarios: ''
+    };
+  }
+
+  getEstadoPaso(paso: PasoFlujo): 'pendiente' | 'en-progreso' | 'completado' {
+    if (!this.flujoAsignado) {
+      return 'pendiente';
+    }
+    const registro = this.flujoAsignado.ejecucion.find(e => e.pasoId === paso.id);
+    if (registro?.fin) {
+      return 'completado';
+    }
+    if (registro) {
+      return 'en-progreso';
+    }
+    return 'pendiente';
+  }
+
+  iniciarPaso(paso: PasoFlujo) {
+    if (!this.flujoAsignado) {
+      return;
+    }
+    this.workflowService.startPaso(this.flujoAsignado.id, paso.id);
+    this.actualizarFlujoParaPaciente(this.flujoAsignado.pacienteId);
+  }
+
+  completarPaso(paso: PasoFlujo) {
+    if (!this.flujoAsignado) {
+      return;
+    }
+    this.workflowService.completePaso(this.flujoAsignado.id, paso.id, {
+      facilidad: this.feedbackPaso.facilidad,
+      comentarios: this.feedbackPaso.comentarios,
+      camposAutocompletados: this.feedbackPaso.camposAutocompletados,
+      camposManuales: this.feedbackPaso.camposManuales
+    });
+    this.actualizarFlujoParaPaciente(this.flujoAsignado.pacienteId);
+  }
+
+  getProgresoFlujo(): number {
+    if (!this.flujoAsignado || !this.pasosFlujo.length) {
+      return 0;
+    }
+    const total = this.pasosFlujo.length;
+    const completados = this.flujoAsignado.ejecucion.filter(e => e.fin).length;
+    return Math.round((completados / total) * 100);
   }
 }

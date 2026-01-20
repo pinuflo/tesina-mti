@@ -38,121 +38,129 @@ export class DataService {
   }
 
   private createFakeData() {
-    const now = new Date();
-    
-    // Crear pacientes fake
     const pacientesFake: Paciente[] = [
       {
-        id: '1',
-        nombre: 'María',
-        apellido: 'González',
-        edad: 32,
-        telefono: '+56 9 8765 4321',
-        email: 'maria.gonzalez@email.com',
-        fechaRegistro: new Date(2024, 0, 15),
+        id: 'pac_manual',
+        nombre: 'Lucía',
+        apellido: 'Pérez',
+        edad: 34,
+        telefono: '+56 9 2222 3344',
+        email: 'lucia.perez@demo.com',
+        fechaRegistro: new Date(2023, 9, 12),
         activo: true
       },
       {
-        id: '2',
-        nombre: 'Carlos',
-        apellido: 'Mendoza',
-        edad: 45,
-        telefono: '+56 9 1234 5678',
-        email: 'carlos.mendoza@email.com',
-        fechaRegistro: new Date(2024, 1, 20),
+        id: 'pac_ia',
+        nombre: 'Diego',
+        apellido: 'Torres',
+        edad: 29,
+        telefono: '+56 9 5555 8899',
+        email: 'diego.torres@demo.com',
+        fechaRegistro: new Date(2024, 10, 5),
         activo: true
-      },
-      {
-        id: '3',
-        nombre: 'Ana',
-        apellido: 'Silva',
-        edad: 28,
-        telefono: '+56 9 9876 5432',
-        email: 'ana.silva@email.com',
-        fechaRegistro: new Date(2024, 2, 10),
-        activo: true
-      },
-      {
-        id: '4',
-        nombre: 'Roberto',
-        apellido: 'Fernández',
-        edad: 38,
-        telefono: '+56 9 5555 1234',
-        email: 'roberto.fernandez@email.com',
-        fechaRegistro: new Date(2024, 3, 5),
-        activo: false
       }
     ];
 
-    // Crear historial nutricional fake
-    const registrosFake: RegistroNutricional[] = [];
-    const seguimientosFake: SeguimientoMensual[] = [];
-    const pautasFake: PautaNutricional[] = [];
-
-    pacientesFake.forEach(paciente => {
-      // Crear 6 meses de historial para cada paciente
-      for (let i = 0; i < 6; i++) {
-        const fecha = new Date(2024, i + 2, 15);
-        const pesoBase = paciente.id === '1' ? 68 : paciente.id === '2' ? 85 : paciente.id === '3' ? 62 : 92;
-        const pesoVariacion = Math.random() * 4 - 2; // -2 a +2 kg
-        
-        // Registro nutricional
-        const registro: RegistroNutricional = {
-          id: `reg_${paciente.id}_${i}`,
-          pacienteId: paciente.id,
-          fecha: fecha,
-          peso: pesoBase + pesoVariacion,
-          altura: paciente.id === '1' ? 165 : paciente.id === '2' ? 178 : paciente.id === '3' ? 160 : 175,
-          actividad: ['sedentario', 'ligero', 'moderado'][Math.floor(Math.random() * 3)] as any,
-          objetivo: ['perder', 'mantener', 'ganar'][Math.floor(Math.random() * 3)] as any,
-          calorias: 1800 + Math.floor(Math.random() * 600),
-          proteinas: 100 + Math.floor(Math.random() * 50),
-          carbohidratos: 200 + Math.floor(Math.random() * 100),
-          grasas: 60 + Math.floor(Math.random() * 30),
-          recomendaciones: 'Recomendaciones generales basadas en evaluación',
-          createdWith: Math.random() > 0.5 ? 'con-ia' : 'sin-ia'
-        };
-        registrosFake.push(registro);
-
-        // Seguimiento mensual
-        const seguimiento: SeguimientoMensual = {
-          id: `seg_${paciente.id}_${i}`,
-          pacienteId: paciente.id,
-          mes: fecha.getMonth() + 1,
-          año: fecha.getFullYear(),
-          pesoInicial: pesoBase + pesoVariacion,
-          pesoFinal: pesoBase + pesoVariacion + (Math.random() * 2 - 1),
-          cumplimientoDieta: 60 + Math.floor(Math.random() * 40),
-          cumplimientoEjercicio: 50 + Math.floor(Math.random() * 50),
-          satisfaccion: 3 + Math.floor(Math.random() * 3),
-          observaciones: 'Progreso satisfactorio. Paciente comprometido con el tratamiento.',
-          fecha: fecha
-        };
-        seguimientosFake.push(seguimiento);
-
-        // Pauta nutricional
-        const pauta: PautaNutricional = {
-          id: `pauta_${paciente.id}_${i}`,
-          pacienteId: paciente.id,
-          fecha: fecha,
-          calorias: registro.calorias,
-          proteinas: registro.proteinas,
-          carbohidratos: registro.carbohidratos,
-          grasas: registro.grasas,
-          recomendaciones: `Pauta personalizada para ${paciente.nombre}. Enfoque en ${registro.objetivo} peso.`,
-          menu: [
-            'Desayuno: Avena con frutas y frutos secos',
-            'Media mañana: Yogur natural con almendras',
-            'Almuerzo: Pollo grillado con ensalada mixta',
-            'Once: Té con tostadas integrales',
-            'Cena: Pescado al horno con verduras'
-          ],
-          createdWith: registro.createdWith,
-          basadoEnHistorial: i > 0
-        };
-        pautasFake.push(pauta);
+    const registrosFake: RegistroNutricional[] = [
+      {
+        id: 'reg_manual_1',
+        pacienteId: 'pac_manual',
+        fecha: new Date(2024, 4, 10),
+        peso: 69.2,
+        altura: 165,
+        actividad: 'moderado',
+        objetivo: 'perder',
+        calorias: 1950,
+        proteinas: 110,
+        carbohidratos: 220,
+        grasas: 60,
+        recomendaciones: 'Plan manual previo centrado en déficit moderado.',
+        createdWith: 'sin-ia'
+      },
+      {
+        id: 'reg_manual_2',
+        pacienteId: 'pac_manual',
+        fecha: new Date(2024, 6, 7),
+        peso: 67.8,
+        altura: 165,
+        actividad: 'moderado',
+        objetivo: 'mantener',
+        calorias: 1850,
+        proteinas: 115,
+        carbohidratos: 200,
+        grasas: 58,
+        recomendaciones: 'Ajuste manual posterior a la fase inicial.',
+        createdWith: 'sin-ia'
+      },
+      {
+        id: 'reg_manual_3',
+        pacienteId: 'pac_manual',
+        fecha: new Date(2024, 8, 2),
+        peso: 66.9,
+        altura: 165,
+        actividad: 'moderado',
+        objetivo: 'mantener',
+        calorias: 1820,
+        proteinas: 118,
+        carbohidratos: 198,
+        grasas: 55,
+        recomendaciones: 'Seguimiento manual previo a la validación comparativa.',
+        createdWith: 'sin-ia'
       }
-    });
+    ];
+
+    const seguimientosFake: SeguimientoMensual[] = [
+      {
+        id: 'seg_manual_1',
+        pacienteId: 'pac_manual',
+        mes: 5,
+        año: 2024,
+        pesoInicial: 69.2,
+        pesoFinal: 68.3,
+        cumplimientoDieta: 78,
+        cumplimientoEjercicio: 70,
+        satisfaccion: 4,
+        observaciones: 'Adherencia adecuada pero requiere apoyo extra en cenas.',
+        fecha: new Date(2024, 5, 30)
+      },
+      {
+        id: 'seg_manual_2',
+        pacienteId: 'pac_manual',
+        mes: 7,
+        año: 2024,
+        pesoInicial: 67.8,
+        pesoFinal: 67.2,
+        cumplimientoDieta: 82,
+        cumplimientoEjercicio: 76,
+        satisfaccion: 4,
+        observaciones: 'Progreso sostenido pero el proceso manual insume más tiempo.',
+        fecha: new Date(2024, 7, 28)
+      }
+    ];
+
+    const pautaMenuObjetivo = [
+      'Desayuno: Tostadas integrales con palta, tomate y huevos pochados',
+      'Media mañana: Yogur griego con frutos rojos y semillas',
+      'Almuerzo: Salmón a la plancha con quinoa y ensalada verde',
+      'Once: Smoothie de espinaca, plátano y proteína vegetal',
+      'Cena: Pechuga de pollo con vegetales asados y hummus'
+    ];
+
+    const pautasFake: PautaNutricional[] = [
+      {
+        id: 'pauta_manual_1',
+        pacienteId: 'pac_manual',
+        fecha: new Date(2024, 7, 1),
+        calorias: 1850,
+        proteinas: 120,
+        carbohidratos: 195,
+        grasas: 62,
+        recomendaciones: 'Propuesta manual previa. Objetivo: consolidar recomposición corporal.',
+        menu: pautaMenuObjetivo,
+        createdWith: 'sin-ia',
+        basadoEnHistorial: true
+      }
+    ];
 
     // Guardar en localStorage y actualizar subjects
     this.saveToStorage('pacientes', pacientesFake);

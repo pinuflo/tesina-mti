@@ -19,6 +19,125 @@
     </div>
   </div>
 
+  <div class="row mt-4">
+    <div class="col-12">
+      <div *ngIf="flujoAsignado && flujoDetalle; else flujoNoAsignado" class="card border-info">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0">
+              <i class="fas fa-route me-2"></i>
+              Flujo asignado: {{ flujoDetalle?.nombre }}
+            </h5>
+            <small class="text-muted">
+              Modo {{ flujoAsignado?.modoEjecutado === 'con-ia' ? 'Con IA' : 'Sin IA' }} • Paso en foco: {{ pasoEnEjecucion?.titulo || 'Pendiente' }}
+            </small>
+          </div>
+          <div style="min-width: 200px;">
+            <small class="text-muted">Avance general ({{ getProgresoFlujo() }}%)</small>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar"
+                   [class]="flujoAsignado?.modoEjecutado === 'con-ia' ? 'bg-primary' : 'bg-secondary'"
+                   [style.width.%]="getProgresoFlujo()">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-secondary" *ngIf="flujoAsignado?.objetivoFinal as objetivo">
+            <div class="d-flex flex-column flex-lg-row justify-content-between">
+              <div class="me-lg-4">
+                <h6 class="mb-1">Objetivo final del flujo</h6>
+                <p class="mb-1 small">{{ objetivo.descripcion }}</p>
+                <div class="small text-muted">
+                  Meta nutricional: {{ objetivo.caloriasObjetivo }} kcal • {{ objetivo.proteinasObjetivo }}g proteínas • {{ objetivo.carbohidratosObjetivo }}g CHO • {{ objetivo.grasasObjetivo }}g grasas
+                </div>
+              </div>
+              <div>
+                <small class="text-muted">Menú esperado</small>
+                <ul class="small mb-0">
+                  <li *ngFor="let item of objetivo.menuSugerido">{{ item }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-7">
+              <div class="timeline">
+                 <div class="timeline-item border-start ps-3"
+                   *ngFor="let paso of pasosFlujo"
+                     [ngClass]="{
+                       'border-primary border-3': paso.id === pasoEnEjecucion?.id,
+                       'opacity-50': getEstadoPaso(paso) === 'completado'
+                     }">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="mb-0">{{ paso.orden }}. {{ paso.titulo }}</h6>
+                      <small class="text-muted">{{ paso.descripcion }}</small>
+                    </div>
+                    <span class="badge"
+                          [class.bg-primary]="getEstadoPaso(paso) === 'en-progreso'"
+                          [class.bg-success]="getEstadoPaso(paso) === 'completado'"
+                          [class.bg-secondary]="getEstadoPaso(paso) === 'pendiente'">
+                      {{ getEstadoPaso(paso) | titlecase }}
+                    </span>
+                  </div>
+                  <div class="mt-2" *ngIf="paso.checklist?.length">
+                    <small class="d-block" *ngFor="let item of paso.checklist">• {{ item }}</small>
+                  </div>
+                  <div class="mt-2" *ngIf="paso.modulo === 'evaluacion'">
+                    <button class="btn btn-sm btn-outline-primary me-2"
+                            (click)="iniciarPaso(paso)"
+                            [disabled]="getEstadoPaso(paso) !== 'pendiente'">
+                      <i class="fas fa-play me-1"></i>
+                      Iniciar
+                    </button>
+                    <button class="btn btn-sm btn-success"
+                            (click)="completarPaso(paso)"
+                            [disabled]="getEstadoPaso(paso) !== 'en-progreso'">
+                      <i class="fas fa-check me-1"></i>
+                      Completar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5" *ngIf="pasoEnEjecucion && pasoEnEjecucion.modulo === 'evaluacion'">
+              <h6>Registro del paso en ejecución</h6>
+              <div class="mb-3">
+                <label class="form-label">Facilidad del paso (1 = complejo, 5 = muy fácil)</label>
+                <input type="range" class="form-range" min="1" max="5" [(ngModel)]="feedbackPaso.facilidad" name="facilidadPaso">
+                <div class="text-muted small">Valor actual: {{ feedbackPaso.facilidad }}</div>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="form-label">Campos autocompletados</label>
+                  <input type="number" class="form-control" min="0" [(ngModel)]="feedbackPaso.camposAutocompletados" name="camposAuto">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Campos manuales</label>
+                  <input type="number" class="form-control" min="0" [(ngModel)]="feedbackPaso.camposManuales" name="camposManual">
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="form-label">Comentarios</label>
+                <textarea class="form-control" rows="3" [(ngModel)]="feedbackPaso.comentarios" name="comentariosPaso"
+                          placeholder="Notas sobre el esfuerzo o incidencias"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #flujoNoAsignado>
+        <div class="card border-warning">
+          <div class="card-body text-center">
+            <i class="fas fa-route fa-2x text-warning mb-2"></i>
+            <p class="mb-0">Asigna un flujo desde la sección de Pacientes para guiar esta evaluación y medir resultados.</p>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
   <!-- Formulario de datos del paciente -->
   <div class="row">
     <div class="col-lg-6">
@@ -92,6 +211,48 @@
                      [(ngModel)]="paciente.altura"
                      name="altura"
                      placeholder="170">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Masa grasa estimada (kg)</label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="paciente.masaGrasa"
+                     name="masaGrasa"
+                     placeholder="Ej: 18"
+                     step="0.1">
+              <small class="text-muted">Permite refinar la cantidad de proteínas si la masa magra es conocida.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Masa magra estimada (kg)</label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="paciente.masaMagra"
+                     name="masaMagra"
+                     placeholder="Ej: 50"
+                     step="0.1">
+              <small class="text-muted">La IA puede estimarla si no se ingresa, pero el modo manual debe registrarla para cálculos precisos.</small>
+            </div>
+
+            <div class="col-12" *ngIf="isAIEnabled && estimacionMasaMagra">
+              <div class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="fas fa-robot me-2"></i>
+                    Estimación IA de composición corporal
+                  </h6>
+                  <p class="mb-1 small">
+                    % de grasa estimado: <strong>{{ porcentajeGrasaEstimado }}%</strong>
+                    • Masa grasa: <strong>{{ estimacionMasaGrasa }} kg</strong>
+                    • Masa magra: <strong>{{ estimacionMasaMagra }} kg</strong>
+                  </p>
+                  <p class="mb-0 text-muted small">Puedes ajustar manualmente si tienes mediciones más precisas.</p>
+                </div>
+                <button class="btn btn-outline-light text-dark mt-2 mt-md-0" (click)="usarEstimacionIA()">
+                  <i class="fas fa-download me-1"></i>
+                  Usar esta estimación
+                </button>
+              </div>
             </div>
             
             <div class="col-md-6">

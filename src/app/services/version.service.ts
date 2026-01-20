@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { VersionMode } from '../models/nutricion.models';
 
-export type VersionType = 'sin-ia' | 'con-ia';
+export type VersionType = VersionMode;
 
 @Injectable({
   providedIn: 'root'
