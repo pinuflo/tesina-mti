@@ -150,3 +150,41 @@ export interface FlujoAsignado {
   resultado?: FlujoResultado;
   objetivoFinal?: FlujoObjetivoFinal;
 }
+
+export interface MealPortion {
+  id: string;
+  label: string;
+  descripcion: string;
+  macroDominante: 'proteina' | 'carbohidrato' | 'grasa' | 'mixto';
+  calorias: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
+}
+
+export interface MealPortionAssignment extends MealPortion {
+  instanceId: string;
+  units: number;
+}
+
+export interface MealTimePlan {
+  id: string;
+  title: string;
+  portions: MealPortionAssignment[];
+}
+
+export interface DailyMealPlan {
+  day: string;
+  meals: MealTimePlan[];
+}
+
+export interface ScenarioPatientPreset {
+  edad: number;
+  peso: number;
+  altura: number;
+  actividad: 'sedentario' | 'ligero' | 'moderado' | 'intenso';
+  objetivo: 'perder' | 'mantener' | 'ganar';
+  masaGrasa?: number;
+  masaMagra?: number;
+  notas?: string;
+}

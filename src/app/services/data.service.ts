@@ -174,6 +174,10 @@ export class DataService {
     this.pautasSubject.next(pautasFake);
   }
 
+  resetToSeedData(): void {
+    this.createFakeData();
+  }
+
   // Métodos para gestionar pacientes
   getPacientes(): Paciente[] {
     return this.pacientesSubject.value;

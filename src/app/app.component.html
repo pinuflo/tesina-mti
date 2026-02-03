@@ -1,13 +1,4 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
-<!-- * * * * * * * to get started with your project! * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" [class.nav-blocked]="!scenarioActive">
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/">Sistema Nutricional</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,8 +20,8 @@
             <i class="fas fa-user" *ngIf="!isAIEnabled"></i>
             Modo:
           </span>
-          <select class="form-select form-select-sm" 
-                  [value]="currentVersion" 
+            <select class="form-select form-select-sm"
+              [value]="currentVersion"
                   (change)="onVersionChange($event)"
                   style="width: auto; display: inline-block;">
             <option value="sin-ia">Sin IA</option>
@@ -41,19 +32,29 @@
     </div>
   </div>
 </nav>
-<div class="container mt-4">
-  <router-outlet></router-outlet>
+<div class="app-shell">
+  <div class="main-panel" [class.panel-blocked]="!scenarioActive">
+    <div class="content-wrapper">
+      <div class="content-overlay" *ngIf="!scenarioActive">
+        <div class="overlay-card">
+          <h5>Inicia un escenario de prueba</h5>
+          <p>Elige uno de los flujos A1/A2/B1/B2 a la derecha para habilitar la edición de módulos.</p>
+          <small>Mientras tanto, todo el contenido permanece visible en modo lectura.</small>
+        </div>
+      </div>
+      <div class="content-scroll">
+        <div class="container mt-4">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="wizard-panel">
+    <app-scenario-wizard (scenarioChange)="onScenarioChange($event)"></app-scenario-wizard>
+  </aside>
 </div>
-<footer class="bg-dark text-white text-center py-3 mt-5 fixed-bottom">
+<footer class="bg-dark text-white text-center py-3 mt-0">
   <div class="container">
     <small>&copy; 2025 Sistema Nutricional. Todos los derechos reservados.</small>
   </div>
 </footer>
-
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->

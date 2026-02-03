@@ -9,6 +9,14 @@ Definir, guiar y medir dos flujos diferenciados (Sin IA y Con IA) dentro del sis
 - **Mismo resultado esperado**: ambos flujos apuntan al mismo objetivo final (pauta mediterránea de 1800 kcal con menú sugerido). Esto permite comparar cuánto tarda cada modalidad en alcanzar el mismo entregable.
 - Los datos se cargan desde `localStorage` mediante `DataService.createFakeData()` y los flujos se asignan automáticamente desde `WorkflowService.seedScenarioAssignments()`.
 
+### Escenarios cruzados Paciente/Modo
+- **Paciente A / Manual (Escenario A1)**
+- **Paciente A / IA (Escenario A2)**
+- **Paciente B / Manual (Escenario B1)**
+- **Paciente B / IA (Escenario B2)**
+
+Cada pareja comparte objetivo, visitas y entregables. La comparación se hace "back-to-back": primero se ejecuta un escenario, se cierra el flujo y luego se lanza el gemelo con el otro modo para validar que el nutricionista arriba al mismo plan alimentario.
+
 ## 1. Plantillas de flujo prescrito
 - **Modelo `FlujoTrabajo`**: lista ordenada de pasos, criterios de éxito, tiempo estimado y tipo de modo (sin IA vs con IA).
 - **Catálogo de flujos**: pantalla para crear/editar plantillas (ej. "Protocolo Manual" y "Protocolo Asistido").
@@ -20,6 +28,25 @@ Definir, guiar y medir dos flujos diferenciados (Sin IA y Con IA) dentro del sis
 - Validaciones específicas por modo:
   - **Sin IA**: campos obligatorios (recordatorio 24h, notas clínicas, decisiones manuales) y cálculo visible de fórmulas (TMB, calorías).
   - **Con IA**: acciones automatizadas (simular análisis, generar menú, proyectar resultados) y confirmaciones de aprobación del profesional.
+
+### Barra lateral controladora de escenarios
+- Ubicada a la derecha y fija en todas las pantallas del flujo. Sirve como "wizard" maestro.
+- Estados: `Seleccionar escenario` (lista de los cuatro escenarios), `Flujo en curso` (paso activo + instrucciones específicas de la visita), `Resultado final` (resumen y botón "Tomar otro escenario").
+- Al elegir un escenario se dispara `WorkflowService.iniciarEscenario(escenarioId)` que crea la secuencia de pasos, precarga datos y bloquea el resto de escenarios.
+- El panel muestra para cada visita: objetivo, campos que deben completarse, artefacto esperado (ej. menú, recomendación), tiempo objetivo y recordatorios de validación cruzada.
+- Botones disponibles: `Iniciar flujo`, `Completar paso`, `Registrar incidencia`, `Finalizar flujo`. Tras finalizar, el sistema revela los resultados (KPIs, logs) y habilita la selección del siguiente escenario.
+
+#### Mockups a alinear (Solución 1)
+- **Fase 0 – Selección**: barra lateral mostrando cards resumidas de A1/A2/B1/B2 con indicadores de estado (Pendiente, En curso, Completado). Acciones: `Iniciar prueba` y tooltip con objetivo.
+- **Fase 1 – Ejecución paso a paso**: vista con timeline vertical del flujo activo y checklist expandible por visita. La barra muestra instrucciones detalladas, campos requeridos y atajos (ej. "Autocompletar con IA"). Incluir contadores de tiempo/clicks a la vista.
+- **Fase 2 – Cierre**: resumen compacto con KPIs logrados vs esperados, delta de tiempo, checklist de validación y CTA `Tomar otro escenario`. Debe permitir comparar rápidamente con el escenario gemelo (ej. badges "A1 vs A2").
+- **Comportamiento bloqueado**: mockups deben evidenciar la capa de "solo lectura" en el resto del sitio cuando no hay flujo activo (superposición, íconos de candado, texto "Inicia un escenario para editar").
+- **Estados vacíos/mensajes**: considerar diseños para "sin escenarios completados" y para cuando se completan los cuatro, invitando a revisar el dashboard.
+
+### Disponibilidad condicionada al flujo
+- Mientras no haya un escenario activo, todas las áreas operativas se muestran en modo lectura con indicadores "Bloqueado hasta iniciar flujo".
+- Componentes críticos (formularios, botones de acción) quedan deshabilitados y se sustituyen por tooltips que remiten a la barra lateral para iniciar un escenario.
+- Esta restricción asegura que toda interacción quede trazada dentro de un contexto de prueba, facilitando la comparación A1/A2 y B1/B2.
 
 ## 3. Medición de resultados
 - Nuevos campos en modelos (`confianzaIA`, `tiempoPaso`, `resultadoPaso`) para guardar KPIs.

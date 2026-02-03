@@ -1,0 +1,108 @@
+<div class="wizard" *ngIf="!loading">
+  <div class="wizard-header">
+    <div>
+      <h4>Escenarios de Prueba</h4>
+      <p>Selecciona un escenario y sigue las instrucciones para completar el flujo.</p>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" (click)="resetAll()">Reiniciar todo</button>
+  </div>
+
+  <ng-container *ngIf="!currentScenario; else scenarioInProgress">
+    <div class="scenario-grid">
+      <div class="scenario-card" *ngFor="let scenario of scenarios" [class.disabled]="scenarioStates[scenario.id] === 'completed'">
+        <div class="scenario-card-header">
+          <div class="badge" [ngClass]="getStateClass(scenario.id)">
+            {{ scenarioStates[scenario.id] === 'completed' ? 'Completado' : 'Pendiente' }}
+          </div>
+          <h5>{{ scenario.title }}</h5>
+          <p>{{ scenario.patientName }} · {{ scenario.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</p>
+        </div>
+        <p class="scenario-description">{{ scenario.description }}</p>
+        <div class="scenario-preset">
+          <p class="preset-label">Datos a ingresar</p>
+          <ul>
+            <li>Edad: {{ scenario.patientPreset.edad }} años · Peso: {{ scenario.patientPreset.peso }} kg</li>
+            <li>Altura: {{ scenario.patientPreset.altura }} cm · Actividad: {{ scenario.patientPreset.actividad | titlecase }}</li>
+            <li>Objetivo: {{ scenario.patientPreset.objetivo | titlecase }}</li>
+            <li *ngIf="scenario.patientPreset.masaGrasa">Masa grasa/magra: {{ scenario.patientPreset.masaGrasa }} kg / {{ scenario.patientPreset.masaMagra }} kg</li>
+            <li *ngIf="scenario.patientPreset.notas">{{ scenario.patientPreset.notas }}</li>
+          </ul>
+        </div>
+        <button class="btn btn-primary" (click)="startScenario(scenario.id)" [disabled]="scenarioStates[scenario.id] === 'completed'">
+          Iniciar prueba
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #scenarioInProgress>
+    <div class="current-scenario">
+      <div class="current-header">
+        <div>
+          <p class="label">Flujo en curso</p>
+          <h5>{{ currentScenario?.title }}</h5>
+          <span class="patient">{{ currentScenario?.patientName }} · {{ currentScenario?.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</span>
+        </div>
+        <button class="btn btn-link" (click)="resetScenario(currentScenario!.id)">Cancelar flujo</button>
+      </div>
+
+      <div class="preset-banner" *ngIf="currentScenario?.patientPreset">
+        <p class="mb-1">Cargar antes de iniciar:</p>
+        <div class="preset-grid">
+          <span>Edad {{ currentScenario?.patientPreset.edad }} años</span>
+          <span>Peso {{ currentScenario?.patientPreset.peso }} kg</span>
+          <span>Altura {{ currentScenario?.patientPreset.altura }} cm</span>
+          <span>Actividad {{ currentScenario?.patientPreset.actividad | titlecase }}</span>
+          <span>Objetivo {{ currentScenario?.patientPreset.objetivo | titlecase }}</span>
+          <span *ngIf="currentScenario?.patientPreset.masaGrasa">Masa grasa {{ currentScenario?.patientPreset.masaGrasa }} kg</span>
+          <span *ngIf="currentScenario?.patientPreset.masaMagra">Masa magra {{ currentScenario?.patientPreset.masaMagra }} kg</span>
+        </div>
+        <small *ngIf="currentScenario?.patientPreset.notas" class="text-muted">{{ currentScenario?.patientPreset.notas }}</small>
+      </div>
+
+      <div class="visit-progress">
+        <div class="visit" *ngFor="let visit of currentScenario?.visits" [class.active]="visit.id === visitId" [class.completed]="completedVisits.includes(visit.id)">
+          <div class="visit-step">{{ completedVisits.includes(visit.id) ? '✓' : visit.id === visitId ? '●' : '○' }}</div>
+          <div class="visit-info">
+            <p class="visit-title">{{ visit.title }}</p>
+            <small>{{ visit.expectedOutcome }}</small>
+          </div>
+          <div class="visit-target">
+            <span>{{ visit.targetMinutes }} min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="visit-details" *ngIf="currentVisit">
+        <div class="phase-setup" *ngIf="currentVisit.id === 'visita_1' && currentScenario?.patientPreset">
+          <p class="phase-label">Cargar antes de iniciar:</p>
+          <ul>
+            <li>Edad {{ currentScenario.patientPreset.edad }} años</li>
+            <li>Peso {{ currentScenario.patientPreset.peso }} kg</li>
+            <li>Altura {{ currentScenario.patientPreset.altura }} cm</li>
+            <li>Actividad {{ currentScenario.patientPreset.actividad | titlecase }}</li>
+            <li>Objetivo {{ currentScenario.patientPreset.objetivo | titlecase }}</li>
+            <li *ngIf="currentScenario.patientPreset.masaGrasa && currentScenario.patientPreset.masaMagra">
+              Masa grasa {{ currentScenario.patientPreset.masaGrasa }} kg · Masa magra {{ currentScenario.patientPreset.masaMagra }} kg
+            </li>
+          </ul>
+          <p class="phase-note" *ngIf="currentScenario.patientPreset.notas">
+            {{ currentScenario.patientPreset.notas }}
+          </p>
+        </div>
+        <h6>Instrucciones actuales</h6>
+        <ul>
+          <li *ngFor="let instruction of currentVisit.instructions">{{ instruction }}</li>
+        </ul>
+        <div class="actions">
+          <button class="btn btn-success" (click)="completeVisit()">Completar paso</button>
+        </div>
+      </div>
+
+      <div class="summary" *ngIf="!currentVisit">
+        <h6>Flujo completado</h6>
+        <p>Revisa los resultados en el panel principal y elige otro escenario para continuar.</p>
+      </div>
+    </div>
+  </ng-template>
+</div>

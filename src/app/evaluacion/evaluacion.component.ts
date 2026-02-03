@@ -4,7 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { VersionService } from '../services/version.service';
 import { DataService } from '../services/data.service';
-import { Paciente, FlujoAsignado, FlujoTrabajo, PasoFlujo } from '../models/nutricion.models';
+import {
+  Paciente,
+  FlujoAsignado,
+  FlujoTrabajo,
+  PasoFlujo,
+  DailyMealPlan,
+  MealPortion,
+  MealPortionAssignment,
+  ScenarioPatientPreset
+} from '../models/nutricion.models';
+import { ScenarioService } from '../services/scenario.service';
 import { WorkflowService } from '../services/workflow.service';
 
 @Component({
@@ -18,6 +28,9 @@ export class EvaluacionComponent implements OnInit {
   isAIEnabled = false;
   pacienteSeleccionado: Paciente | null = null;
   pacientes: Paciente[] = [];
+  currentStep: 1 | 2 = 1;
+  scenarioPreset: ScenarioPatientPreset | null = null;
+  scenarioPatientName: string | null = null;
   
   // Datos del paciente
   paciente = {
@@ -41,6 +54,50 @@ export class EvaluacionComponent implements OnInit {
     recomendaciones: ''
   };
 
+  availablePortions: MealPortion[] = [
+    {
+      id: 'macro-proteina',
+      label: 'Porción de proteína',
+      descripcion: '25g proteína neta',
+      macroDominante: 'proteina',
+      calorias: 130,
+      proteinas: 25,
+      carbohidratos: 0,
+      grasas: 3
+    },
+    {
+      id: 'macro-carbo',
+      label: 'Porción de carbohidratos',
+      descripcion: '30g carbohidratos + 2g grasa',
+      macroDominante: 'carbohidrato',
+      calorias: 150,
+      proteinas: 2,
+      carbohidratos: 30,
+      grasas: 2
+    },
+    {
+      id: 'macro-grasa',
+      label: 'Porción de grasa saludable',
+      descripcion: '15g grasas mono/poli',
+      macroDominante: 'grasa',
+      calorias: 135,
+      proteinas: 0,
+      carbohidratos: 0,
+      grasas: 15
+    }
+  ];
+
+  private macroOrder: MealPortion['macroDominante'][] = ['proteina', 'carbohidrato', 'grasa'];
+  private macroPortionMap: Record<MealPortion['macroDominante'], string> = {
+    proteina: 'macro-proteina',
+    carbohidrato: 'macro-carbo',
+    grasa: 'macro-grasa',
+    mixto: 'macro-carbo'
+  };
+
+  dailyMealPlan: DailyMealPlan = this.buildEmptyDailyPlan();
+  private macroTolerance = 0.08;
+
   flujoAsignado: FlujoAsignado | null = null;
   flujoDetalle: FlujoTrabajo | null = null;
   pasosFlujo: PasoFlujo[] = [];
@@ -60,7 +117,8 @@ export class EvaluacionComponent implements OnInit {
     public dataService: DataService,
     private route: ActivatedRoute,
     private router: Router,
-    private workflowService: WorkflowService
+    private workflowService: WorkflowService,
+    private scenarioService: ScenarioService
   ) {}
 
   ngOnInit() {
@@ -76,6 +134,19 @@ export class EvaluacionComponent implements OnInit {
       this.pacientes = pacientes.filter(p => p.activo);
     });
 
+    this.scenarioService.activeProgress$.subscribe(progress => {
+      if (progress) {
+        const scenario = this.scenarioService.getScenario(progress.scenarioId);
+        this.scenarioPreset = scenario.patientPreset;
+        this.scenarioPatientName = scenario.patientName;
+        this.currentStep = 1;
+      } else {
+        this.scenarioPreset = null;
+        this.scenarioPatientName = null;
+        this.currentStep = 1;
+      }
+    });
+
     // Verificar si viene un paciente específico desde la URL
     this.route.queryParams.subscribe(params => {
       if (params['pacienteId']) {
@@ -88,9 +159,19 @@ export class EvaluacionComponent implements OnInit {
   }
 
   seleccionarPaciente(paciente: Paciente) {
+    this.currentStep = 1;
     this.pacienteSeleccionado = paciente;
     this.paciente.id = paciente.id;
     this.paciente.nombre = `${paciente.nombre} ${paciente.apellido}`;
+    this.paciente.edad = paciente.edad?.toString() || '';
+    this.pautaNutricional = {
+      calorias: 0,
+      proteinas: 0,
+      carbohidratos: 0,
+      grasas: 0,
+      recomendaciones: ''
+    };
+    this.resetMealPlan();
     
     // Si tiene historial, cargar datos del último registro
     const ultimoRegistro = this.dataService.getRegistrosByPaciente(paciente.id)[0];
@@ -107,16 +188,22 @@ export class EvaluacionComponent implements OnInit {
     this.actualizarFlujoParaPaciente(paciente.id);
   }
 
-  calcularPauta() {
-    if (!this.paciente.peso || !this.paciente.altura || !this.pacienteSeleccionado) {
-      alert('Por favor complete todos los campos del paciente y seleccione un paciente');
+  calcularMacrosDiarios() {
+    if (!this.pacienteSeleccionado) {
+      alert('Selecciona un paciente antes de calcular.');
       return;
     }
 
-    // Cálculo básico de TMB (Tasa Metabólica Basal)
+    const edad = this.obtenerEdadReferencia();
     const peso = parseFloat(this.paciente.peso);
     const altura = parseFloat(this.paciente.altura);
-    const edad = this.pacienteSeleccionado.edad;
+
+    if (!edad || edad <= 0 || !peso || peso <= 0 || !altura || altura <= 0) {
+      alert('Por favor completa edad, peso y altura válidos para continuar.');
+      return;
+    }
+
+    this.currentStep = 1;
     
     // Fórmula de Harris-Benedict (aproximada)
     let tmb = 88.362 + (13.397 * peso) + (4.799 * altura) - (5.677 * edad);
@@ -154,11 +241,22 @@ export class EvaluacionComponent implements OnInit {
       grasas: grasasDia,
       recomendaciones: this.isAIEnabled ? this.generarRecomendacionesIA() : this.generarRecomendacionesBasicas()
     };
+
+    this.resetMealPlan();
   }
 
   guardarPauta() {
+    if (this.currentStep !== 2) {
+      alert('Debes completar el Paso 2 antes de guardar la pauta.');
+      return;
+    }
     if (this.pautaNutricional.calorias === 0 || !this.pacienteSeleccionado) {
       alert('Primero debe calcular la pauta nutricional');
+      return;
+    }
+
+    if (!this.planTienePorciones()) {
+      alert('Arma al menos un día de pauta semanal arrastrando porciones o usa "Sugerir pauta"');
       return;
     }
 
@@ -179,7 +277,7 @@ export class EvaluacionComponent implements OnInit {
     });
 
     // Guardar pauta nutricional
-    const menuSugerido = this.isAIEnabled ? this.generarMenuIA() : this.generarMenuBasico();
+    const menuSugerido = this.buildMenuFromPlan();
     this.dataService.addPauta({
       pacienteId: this.pacienteSeleccionado.id,
       fecha: new Date(),
@@ -200,6 +298,422 @@ export class EvaluacionComponent implements OnInit {
     this.router.navigate(['/seguimiento'], { 
       queryParams: { pacienteId: this.pacienteSeleccionado.id } 
     });
+  }
+
+  continuarPaso2() {
+    if (!this.pautaNutricional.calorias) {
+      alert('Calcula los macros diarios antes de avanzar al Paso 2.');
+      return;
+    }
+    if (!this.validarPacienteCompleto()) {
+      return;
+    }
+    if (!this.ensureScenarioPreset()) {
+      return;
+    }
+    if (!this.validarDatosContraEscenario()) {
+      return;
+    }
+    this.currentStep = 2;
+  }
+
+  volverPaso1() {
+    this.currentStep = 1;
+  }
+
+  onPortionDragStart(event: DragEvent, portionId: string) {
+    event.dataTransfer?.setData('text/plain', portionId);
+    event.dataTransfer?.setDragImage((event.target as HTMLElement) || document.body, 0, 0);
+  }
+
+  allowDrop(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  onDropPortion(event: DragEvent, mealId: string) {
+    event.preventDefault();
+    const portionId = event.dataTransfer?.getData('text/plain');
+    if (!portionId) {
+      return;
+    }
+    this.agregarPorcionAMeal(portionId, mealId);
+  }
+
+  getMealTotals(mealId: string) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 };
+    }
+    return meal.portions.reduce(
+      (acc, portion) => ({
+        calorias: acc.calorias + portion.calorias * portion.units,
+        proteinas: acc.proteinas + portion.proteinas * portion.units,
+        carbohidratos: acc.carbohidratos + portion.carbohidratos * portion.units,
+        grasas: acc.grasas + portion.grasas * portion.units
+      }),
+      { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }
+    );
+  }
+
+  getMealMacroSummary(mealId: string) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return [] as Array<{
+        macro: MealPortion['macroDominante'];
+        count: number;
+        proteinas: number;
+        carbohidratos: number;
+        grasas: number;
+        calorias: number;
+      }>;
+    }
+
+    const summary: Record<MealPortion['macroDominante'], {
+      count: number;
+      proteinas: number;
+      carbohidratos: number;
+      grasas: number;
+      calorias: number;
+    }> = {} as any;
+
+    meal.portions.forEach(portion => {
+      const macro = portion.macroDominante;
+      if (!summary[macro]) {
+        summary[macro] = { count: 0, proteinas: 0, carbohidratos: 0, grasas: 0, calorias: 0 };
+      }
+      summary[macro].count += portion.units;
+      summary[macro].proteinas += portion.proteinas * portion.units;
+      summary[macro].carbohidratos += portion.carbohidratos * portion.units;
+      summary[macro].grasas += portion.grasas * portion.units;
+      summary[macro].calorias += portion.calorias * portion.units;
+    });
+
+    return this.macroOrder
+      .filter(macro => summary[macro] && summary[macro].count > 0)
+      .map(macro => ({ macro, ...summary[macro] }));
+  }
+
+  incrementMacro(mealId: string, macro: MealPortion['macroDominante']) {
+    const portionId = this.macroPortionMap[macro];
+    if (!portionId) {
+      return;
+    }
+    this.agregarPorcionAMeal(portionId, mealId);
+  }
+
+  decrementMacro(mealId: string, macro: MealPortion['macroDominante']) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return;
+    }
+    const target = meal.portions.find(p => p.macroDominante === macro);
+    if (!target) {
+      return;
+    }
+    if (target.units > 1) {
+      target.units -= 1;
+    } else {
+      meal.portions = meal.portions.filter(p => p.instanceId !== target.instanceId);
+    }
+  }
+
+  clearMacro(mealId: string, macro: MealPortion['macroDominante']) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return;
+    }
+    meal.portions = meal.portions.filter(p => p.macroDominante !== macro);
+  }
+
+  getMacroLabel(macro: MealPortion['macroDominante']): string {
+    switch (macro) {
+      case 'proteina':
+        return 'proteínas';
+      case 'carbohidrato':
+        return 'carbohidratos';
+      case 'grasa':
+        return 'grasas';
+      default:
+        return 'mixtas';
+    }
+  }
+
+  getDailyTotals() {
+    return this.dailyMealPlan.meals.reduce(
+      (acc, meal) => {
+        meal.portions.forEach(portion => {
+          acc.calorias += portion.calorias * portion.units;
+          acc.proteinas += portion.proteinas * portion.units;
+          acc.carbohidratos += portion.carbohidratos * portion.units;
+          acc.grasas += portion.grasas * portion.units;
+        });
+        return acc;
+      },
+      { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }
+    );
+  }
+
+  getMacroProgress(macro: 'proteinas' | 'carbohidratos' | 'grasas') {
+    const totals = this.getDailyTotals();
+    const target = (this.pautaNutricional as any)[macro] || 0;
+    const current = (totals as any)[macro] || 0;
+    const delta = target - current;
+    const pct = target > 0 ? Math.min(130, Math.round((current / target) * 100)) : 0;
+    return { current, target, delta, pct };
+  }
+
+  planCumpleMacros(): boolean {
+    if (!this.pautaNutricional.calorias) {
+      return false;
+    }
+    const totals = this.getDailyTotals();
+    const dentroProte = Math.abs(this.pautaNutricional.proteinas - totals.proteinas) <= Math.max(5, this.pautaNutricional.proteinas * this.macroTolerance);
+    const dentroCarb = Math.abs(this.pautaNutricional.carbohidratos - totals.carbohidratos) <= Math.max(10, this.pautaNutricional.carbohidratos * this.macroTolerance);
+    const dentroGrasa = Math.abs(this.pautaNutricional.grasas - totals.grasas) <= Math.max(5, this.pautaNutricional.grasas * this.macroTolerance);
+    return dentroProte && dentroCarb && dentroGrasa;
+  }
+
+  resetMealPlan() {
+    this.dailyMealPlan = this.buildEmptyDailyPlan();
+  }
+
+  sugerirPautaIA() {
+    if (!this.isAIEnabled) {
+      return;
+    }
+    if (!this.pautaNutricional.calorias) {
+      alert('Primero calcula los macros diarios.');
+      return;
+    }
+
+    this.resetMealPlan();
+    const recetaIA: Record<string, { portionId: string; units?: number }[]> = {
+      desayuno: [
+        { portionId: 'macro-proteina' },
+        { portionId: 'macro-carbo' }
+      ],
+      media_manana: [
+        { portionId: 'macro-proteina' },
+        { portionId: 'macro-carbo' }
+      ],
+      almuerzo: [
+        { portionId: 'macro-proteina', units: 2 },
+        { portionId: 'macro-carbo', units: 2 },
+        { portionId: 'macro-grasa' }
+      ],
+      colacion: [
+        { portionId: 'macro-proteina' },
+        { portionId: 'macro-grasa' }
+      ],
+      cena: [
+        { portionId: 'macro-proteina' },
+        { portionId: 'macro-carbo' },
+        { portionId: 'macro-grasa' }
+      ]
+    };
+
+    Object.entries(recetaIA).forEach(([mealId, combos]) => {
+      combos.forEach(combo => {
+        const reps = combo.units ?? 1;
+        for (let i = 0; i < reps; i++) {
+          this.agregarPorcionAMeal(combo.portionId, mealId);
+        }
+      });
+    });
+  }
+
+  private buildEmptyDailyPlan(): DailyMealPlan {
+    return {
+      day: 'Semana tipo',
+      meals: [
+        { id: 'desayuno', title: 'Desayuno', portions: [] },
+        { id: 'media_manana', title: 'Media mañana', portions: [] },
+        { id: 'almuerzo', title: 'Almuerzo', portions: [] },
+        { id: 'colacion', title: 'Colación', portions: [] },
+        { id: 'cena', title: 'Cena', portions: [] }
+      ]
+    };
+  }
+
+  planTienePorciones() {
+    return this.dailyMealPlan.meals.some(meal => meal.portions.length > 0);
+  }
+
+  private agregarPorcionAMeal(portionId: string, mealId: string) {
+    const base = this.availablePortions.find(p => p.id === portionId);
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!base || !meal) {
+      return;
+    }
+    meal.portions = [...meal.portions, this.clonePortion(base)];
+  }
+
+  private clonePortion(portion: MealPortion): MealPortionAssignment {
+    const randomId = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `${portion.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    return {
+      ...portion,
+      instanceId: randomId,
+      units: 1
+    };
+  }
+
+  private buildMenuFromPlan(): string[] {
+    if (!this.planTienePorciones()) {
+      return this.isAIEnabled ? this.generarMenuIA() : this.generarMenuBasico();
+    }
+    return this.dailyMealPlan.meals.map(meal => {
+      if (!meal.portions.length) {
+        return `${meal.title}: sin asignar`;
+      }
+      const items = meal.portions
+        .map(portion => `${portion.label} x${portion.units}`)
+        .join(', ');
+      return `${meal.title}: ${items}`;
+    });
+  }
+
+  getCaloriesProgress() {
+    const totals = this.getDailyTotals();
+    const target = this.pautaNutricional.calorias || 0;
+    const delta = target - totals.calorias;
+    const pct = target > 0 ? Math.min(130, Math.round((totals.calorias / target) * 100)) : 0;
+    return { current: Math.round(totals.calorias), target, delta, pct };
+  }
+
+  private validarPacienteCompleto(): boolean {
+    const errores: string[] = [];
+    if (!this.pacienteSeleccionado) {
+      errores.push('Selecciona un paciente activo.');
+    }
+
+    const edad = this.obtenerEdadReferencia();
+    const peso = parseFloat(this.paciente.peso);
+
+  private validarDatosContraEscenario(): boolean {
+    if (!this.scenarioPreset) {
+      return true;
+    }
+
+    const errores = this.obtenerErroresEscenario();
+    if (errores.length) {
+      alert(`⚠️ Para continuar debes replicar exactamente el caso del escenario:
+- ${errores.join('\n- ')}`);
+      return false;
+    }
+    return true;
+  }
+
+  private compararNumero(
+    label: string,
+    actual: number | null,
+    esperado: number | undefined,
+    errores: string[],
+    unidad: string
+  ) {
+    if (esperado === undefined) {
+      return;
+    }
+    if (actual === null || Number.isNaN(actual)) {
+      errores.push(`${label} (${esperado} ${unidad}) debe completarse.`);
+      return;
+    }
+    const tolerancia = 0;
+    if (Math.abs(actual - esperado) > tolerancia) {
+      errores.push(`${label} debe ser ${esperado} ${unidad}. Valor actual: ${actual} ${unidad}.`);
+    }
+  }
+
+  private traducirActividad(valor: 'sedentario' | 'ligero' | 'moderado' | 'intenso'): string {
+    switch (valor) {
+      case 'sedentario':
+        return 'Sedentario';
+      case 'ligero':
+        return 'Actividad ligera';
+      case 'moderado':
+        return 'Actividad moderada';
+      case 'intenso':
+        return 'Actividad intensa';
+    }
+  }
+
+  private traducirObjetivo(valor: 'perder' | 'mantener' | 'ganar'): string {
+    switch (valor) {
+      case 'perder':
+        return 'Perder peso';
+      case 'mantener':
+        return 'Mantener peso';
+      case 'ganar':
+        return 'Ganar peso';
+    }
+  }
+
+  private ensureScenarioPreset(): boolean {
+    if (this.scenarioPreset) {
+      return true;
+    }
+    const current = this.scenarioService.getCurrentScenario();
+    if (current) {
+      this.scenarioPreset = current.scenario.patientPreset;
+      this.scenarioPatientName = current.scenario.patientName;
+      return true;
+    }
+    alert('Debes tener un flujo en curso desde el panel derecho para avanzar al Paso 2.');
+    return false;
+  }
+
+  get scenarioBlockingErrors(): string[] {
+    if (!this.scenarioPreset) {
+      return [];
+    }
+    return this.obtenerErroresEscenario();
+  }
+
+  private obtenerErroresEscenario(): string[] {
+    if (!this.scenarioPreset) {
+      return [];
+    }
+    const errores: string[] = [];
+    const preset = this.scenarioPreset;
+
+    if (!this.pacienteSeleccionado) {
+      errores.push('Selecciona el paciente indicado en el escenario.');
+    } else if (this.scenarioPatientName) {
+      const fullName = `${this.pacienteSeleccionado.nombre} ${this.pacienteSeleccionado.apellido}`.trim();
+      if (fullName !== this.scenarioPatientName) {
+        errores.push(`Paciente seleccionado: ${fullName}. Debe ser ${this.scenarioPatientName}.`);
+      }
+    }
+
+    const edadActual = this.obtenerEdadReferencia();
+    this.compararNumero('Edad', edadActual, preset.edad, errores, 'años');
+    this.compararNumero('Peso', parseFloat(this.paciente.peso), preset.peso, errores, 'kg');
+    this.compararNumero('Altura', parseFloat(this.paciente.altura), preset.altura, errores, 'cm');
+    this.compararNumero('Masa grasa', parseFloat(this.paciente.masaGrasa), preset.masaGrasa, errores, 'kg');
+    this.compararNumero('Masa magra', parseFloat(this.paciente.masaMagra), preset.masaMagra, errores, 'kg');
+
+    if (preset.actividad && this.paciente.actividad !== preset.actividad) {
+      errores.push(`Nivel de actividad debe ser "${this.traducirActividad(preset.actividad)}".`);
+    }
+    if (preset.objetivo && this.paciente.objetivo !== preset.objetivo) {
+      errores.push(`Objetivo debe ser "${this.traducirObjetivo(preset.objetivo)}".`);
+    }
+
+    return errores;
+  }
+
+  private obtenerEdadReferencia(): number | null {
+    if (this.paciente.edad) {
+      const edadManual = parseInt(this.paciente.edad, 10);
+      if (!isNaN(edadManual) && edadManual > 0) {
+        return edadManual;
+      }
+    }
+    if (this.pacienteSeleccionado?.edad) {
+      return this.pacienteSeleccionado.edad;
+    }
+    return null;
   }
 
   generarRecomendacionesBasicas(): string {
