@@ -156,7 +156,15 @@
                       </div>
                     </div>
                     <div *ngIf="!getAsignacionActiva(paciente.id)" class="text-muted small">
-                      Sin flujo activo
+                      Sin protocolo configurado
+                      <div>
+                        <a [routerLink]="['/']"
+                           [queryParams]="{ setupPatient: paciente.id }"
+                           class="btn btn-link btn-sm p-0">
+                          <i class="fas fa-route me-1"></i>
+                          Configurar en Inicio
+                        </a>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -195,11 +203,13 @@
                         <i [class]="paciente.activo ? 'fas fa-pause' : 'fas fa-play'" class="me-1"></i>
                         {{ paciente.activo ? 'Pausar' : 'Activar' }}
                       </button>
-                      <button class="btn btn-outline-primary btn-sm"
-                              (click)="abrirAsignacionFlujo(paciente)">
+                      <a *ngIf="!getAsignacionActiva(paciente.id)"
+                         [routerLink]="['/']"
+                         [queryParams]="{ setupPatient: paciente.id }"
+                         class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-route me-1"></i>
-                        Flujo
-                      </button>
+                        Configurar protocolo
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -214,85 +224,6 @@
               <i class="fas fa-user-plus me-2"></i>
               Agregar Primer Paciente
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mt-4" *ngIf="pacienteParaFlujo">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            <i class="fas fa-route me-2"></i>
-            Asignar flujo a {{ pacienteParaFlujo?.nombre }} {{ pacienteParaFlujo?.apellido }}
-          </h5>
-          <button class="btn btn-sm btn-outline-secondary" (click)="cancelarAsignacionFlujo()">
-            <i class="fas fa-times me-1"></i>
-            Cerrar
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Flujo</label>
-              <select class="form-select" [(ngModel)]="flujoSeleccionadoId" name="flujoSeleccionado">
-                <option *ngFor="let flujo of flujos" [value]="flujo.id">
-                  {{ flujo.nombre }} ({{ flujo.modoObjetivo | uppercase }})
-                </option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Modo de ejecución</label>
-              <select class="form-select" [(ngModel)]="modoSeleccionado" name="modoSeleccionado">
-                <option value="sin-ia">Sin IA</option>
-                <option value="con-ia">Con IA</option>
-              </select>
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-              <button class="btn btn-primary w-100" (click)="asignarFlujo()" [disabled]="!flujoSeleccionadoId">
-                <i class="fas fa-save me-2"></i>
-                Confirmar asignación
-              </button>
-            </div>
-          </div>
-
-          <div class="row mt-4" *ngIf="getFlujoSeleccionado() as flujo">
-            <div class="col-md-4">
-              <div class="border rounded p-3 h-100 bg-light">
-                <small class="text-muted">Tiempo estimado</small>
-                <h4>{{ flujo.tiempoEstimadoMin }} min</h4>
-                <small class="text-muted">Objetivos</small>
-                <ul class="small mb-0">
-                  <li *ngFor="let objetivo of flujo.objetivos">{{ objetivo }}</li>
-                </ul>
-                <div class="mt-3" *ngIf="flujo.objetivoFinal as objetivo">
-                  <small class="text-muted">Entrega esperada</small>
-                  <p class="small mb-1">{{ objetivo.descripcion }}</p>
-                  <ul class="small mb-0">
-                    <li *ngFor="let item of objetivo.menuSugerido">{{ item }}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-8">
-              <h6 class="text-muted">Pasos del flujo</h6>
-              <div class="list-group">
-                <div class="list-group-item" *ngFor="let paso of getPasosOrdenados(flujo)">
-                  <div class="d-flex justify-content-between">
-                    <div>
-                      <strong>{{ paso.orden }}. {{ paso.titulo }}</strong>
-                      <div class="small text-muted">{{ paso.descripcion }}</div>
-                    </div>
-                    <span class="badge"
-                          [class]="paso.modo === 'con-ia' ? 'bg-primary' : paso.modo === 'sin-ia' ? 'bg-secondary' : 'bg-info'">
-                      {{ paso.modo === 'mixto' ? 'Mixto' : paso.modo === 'con-ia' ? 'Con IA' : 'Sin IA' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -18,6 +18,16 @@
         </h5>
         <p class="mb-0">Utiliza el dropdown en la barra superior para cambiar entre "Sin IA" y "Con IA"</p>
       </div>
+
+      <div class="mt-4">
+        <button class="btn btn-lg btn-primary me-3" (click)="openWizard()">
+          <i class="fas fa-route me-2"></i>
+          Configurar protocolo de validación
+        </button>
+        <span class="text-muted" *ngIf="getPacientesSinFlujo().length > 0">
+          {{ getPacientesSinFlujo().length }} paciente(s) aún no tienen protocolo asignado.
+        </span>
+      </div>
     </div>
   </div>
 
@@ -38,6 +48,81 @@
             <li><i class="fas fa-check-circle text-success me-2"></i>Proceso paso a paso</li>
             <li><i class="fas fa-check-circle text-success me-2"></i>Recomendaciones generales</li>
             <li><i class="fas fa-check-circle text-success me-2"></i>Gestión manual de pautas</li>
+
+<div class="wizard-backdrop" *ngIf="showWizard">
+  <div class="wizard-card">
+    <div class="wizard-header">
+      <h5 class="mb-0">
+        <i class="fas fa-route me-2"></i>
+        Configurar protocolo experimental
+      </h5>
+      <button class="btn btn-sm btn-outline-secondary" (click)="closeWizard()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="wizard-body">
+      <p class="text-muted small">
+        Define qué paciente seguirá qué protocolo antes de ingresar a Evaluación o Seguimiento.
+      </p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Paciente</label>
+          <select class="form-select" [(ngModel)]="wizard.pacienteId">
+            <option *ngFor="let paciente of pacientes" [value]="paciente.id">
+              {{ paciente.nombre }} {{ paciente.apellido }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Protocolo</label>
+          <select class="form-select" [(ngModel)]="wizard.flujoId">
+            <option *ngFor="let flujo of flujos" [value]="flujo.id">
+              {{ flujo.nombre }} ({{ flujo.modoObjetivo | uppercase }})
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Modo de ejecución</label>
+          <select class="form-select" [(ngModel)]="wizard.modo">
+            <option value="sin-ia">Sin IA</option>
+            <option value="con-ia">Con IA</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Orden experimental</label>
+          <select class="form-select" [(ngModel)]="wizard.orden">
+            <option value="manual-primero">Manual primero</option>
+            <option value="ia-primero">IA primero</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Etiqueta de iteración</label>
+          <input type="text" class="form-control" [(ngModel)]="wizard.iteracionEtiqueta" placeholder="Iteración 07" />
+        </div>
+        <div class="col-12" *ngIf="wizardError" >
+          <div class="alert alert-warning py-2">{{ wizardError }}</div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <small class="text-muted">Entrega esperada (resumen del protocolo seleccionado)</small>
+        <div class="border rounded p-3 mt-2 bg-light" *ngIf="getFlujoSeleccionado() as flujo">
+          <strong>{{ flujo.nombre }}</strong>
+          <p class="small mb-2">{{ flujo.descripcion }}</p>
+          <ul class="small mb-0">
+            <li *ngFor="let objetivo of flujo.objetivos">{{ objetivo }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="wizard-footer">
+      <button class="btn btn-outline-secondary" (click)="closeWizard()">Cancelar</button>
+      <button class="btn btn-primary" (click)="confirmWizard()">
+        Confirmar y continuar
+      </button>
+    </div>
+  </div>
+</div>
           </ul>
           <p class="card-text text-muted">
             Ideal para profesionales que prefieren el control total sobre cada aspecto de la evaluación nutricional.

@@ -38,6 +38,69 @@ export class DataService {
   }
 
   private createFakeData() {
+    const cohortPatients: Paciente[] = [
+      {
+        id: 'pac_validacion_01',
+        nombre: 'Camila',
+        apellido: 'Rojas',
+        edad: 37,
+        telefono: '+56 9 1010 1122',
+        email: 'camila.rojas@demo.com',
+        fechaRegistro: new Date(2024, 0, 15),
+        activo: true
+      },
+      {
+        id: 'pac_validacion_02',
+        nombre: 'Javier',
+        apellido: 'Soto',
+        edad: 33,
+        telefono: '+56 9 3030 4455',
+        email: 'javier.soto@demo.com',
+        fechaRegistro: new Date(2024, 1, 2),
+        activo: true
+      },
+      {
+        id: 'pac_validacion_03',
+        nombre: 'Valentina',
+        apellido: 'Muñoz',
+        edad: 41,
+        telefono: '+56 9 5050 6677',
+        email: 'valentina.munoz@demo.com',
+        fechaRegistro: new Date(2024, 1, 28),
+        activo: true
+      },
+      {
+        id: 'pac_validacion_04',
+        nombre: 'Tomás',
+        apellido: 'Contreras',
+        edad: 35,
+        telefono: '+56 9 7070 8899',
+        email: 'tomas.contreras@demo.com',
+        fechaRegistro: new Date(2024, 2, 10),
+        activo: true
+      },
+      {
+        id: 'pac_validacion_05',
+        nombre: 'María José',
+        apellido: 'Silva',
+        edad: 39,
+        telefono: '+56 9 9090 2244',
+        email: 'maria.silva@demo.com',
+        fechaRegistro: new Date(2024, 2, 22),
+        activo: true
+      },
+      {
+        id: 'pac_validacion_06',
+        nombre: 'Felipe',
+        apellido: 'Araya',
+        edad: 30,
+        telefono: '+56 9 6060 7788',
+        email: 'felipe.araya@demo.com',
+        fechaRegistro: new Date(2024, 3, 6),
+        activo: true
+      }
+    ];
+
     const pacientesFake: Paciente[] = [
       {
         id: 'pac_manual',
@@ -58,6 +121,100 @@ export class DataService {
         email: 'diego.torres@demo.com',
         fechaRegistro: new Date(2024, 10, 5),
         activo: true
+      },
+      ...cohortPatients
+    ];
+
+    const registrosValidacion: RegistroNutricional[] = [
+      {
+        id: 'reg_validacion_01',
+        pacienteId: 'pac_validacion_01',
+        fecha: new Date(2024, 4, 20),
+        peso: 72.1,
+        altura: 168,
+        actividad: 'moderado',
+        objetivo: 'perder',
+        calorias: 2050,
+        proteinas: 115,
+        carbohidratos: 240,
+        grasas: 68,
+        recomendaciones: 'Iteración manual con énfasis en registro detallado.',
+        createdWith: 'sin-ia'
+      },
+      {
+        id: 'reg_validacion_02',
+        pacienteId: 'pac_validacion_02',
+        fecha: new Date(2024, 4, 22),
+        peso: 81.3,
+        altura: 175,
+        actividad: 'ligero',
+        objetivo: 'perder',
+        calorias: 1900,
+        proteinas: 125,
+        carbohidratos: 210,
+        grasas: 62,
+        recomendaciones: 'Iteración asistida por IA con menú autogenerado.',
+        createdWith: 'con-ia'
+      },
+      {
+        id: 'reg_validacion_03',
+        pacienteId: 'pac_validacion_03',
+        fecha: new Date(2024, 4, 25),
+        peso: 68.4,
+        altura: 160,
+        actividad: 'moderado',
+        objetivo: 'mantener',
+        calorias: 1800,
+        proteinas: 105,
+        carbohidratos: 210,
+        grasas: 58,
+        recomendaciones: 'Iteración manual con checklist clínico completo.',
+        createdWith: 'sin-ia'
+      },
+      {
+        id: 'reg_validacion_04',
+        pacienteId: 'pac_validacion_04',
+        fecha: new Date(2024, 4, 27),
+        peso: 84.6,
+        altura: 180,
+        actividad: 'moderado',
+        objetivo: 'perder',
+        calorias: 2100,
+        proteinas: 140,
+        carbohidratos: 230,
+        grasas: 70,
+        recomendaciones: 'Iteración IA prioriza ahorro operativo.',
+        createdWith: 'con-ia'
+      },
+      {
+        id: 'reg_validacion_05',
+        pacienteId: 'pac_validacion_05',
+        fecha: new Date(2024, 4, 29),
+        peso: 75.2,
+        altura: 170,
+        actividad: 'ligero',
+        objetivo: 'mantener',
+        calorias: 1950,
+        proteinas: 118,
+        carbohidratos: 215,
+        grasas: 65,
+        recomendaciones: 'Iteración manual enfocada en adherencia.',
+        createdWith: 'sin-ia'
+      },
+      {
+        id: 'reg_validacion_06',
+        pacienteId: 'pac_validacion_06',
+        fecha: new Date(2024, 5, 2),
+        peso: 78.9,
+        altura: 176,
+        actividad: 'moderado',
+        objetivo: 'perder',
+        calorias: 2000,
+        proteinas: 130,
+        carbohidratos: 220,
+        grasas: 62,
+        recomendaciones: 'Iteración IA con confirmación profesional.',
+        createdWith: 'con-ia'
       }
     ];
 
@@ -106,7 +263,8 @@ export class DataService {
         grasas: 55,
         recomendaciones: 'Seguimiento manual previo a la validación comparativa.',
         createdWith: 'sin-ia'
-      }
+      },
+      ...registrosValidacion
     ];
 
     const seguimientosFake: SeguimientoMensual[] = [

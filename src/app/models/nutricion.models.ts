@@ -138,6 +138,8 @@ export interface FlujoResultado {
   observaciones?: string;
 }
 
+export type OrdenValidacion = 'manual-primero' | 'ia-primero';
+
 export interface FlujoAsignado {
   id: string;
   pacienteId: string;
@@ -149,6 +151,8 @@ export interface FlujoAsignado {
   ejecucion: PasoEjecucion[];
   resultado?: FlujoResultado;
   objetivoFinal?: FlujoObjetivoFinal;
+  iteracionEtiqueta?: string;
+  ordenValidacion?: OrdenValidacion;
 }
 
 export interface MealPortion {

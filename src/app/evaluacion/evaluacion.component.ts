@@ -105,9 +105,10 @@ export class EvaluacionComponent implements OnInit {
   feedbackPaso = {
     facilidad: 3,
     camposAutocompletados: 0,
-    camposManuales: 0,
+    camposManuales: 6,
     comentarios: ''
   };
+
   estimacionMasaGrasa = 0;
   estimacionMasaMagra = 0;
   porcentajeGrasaEstimado = 0;
@@ -117,40 +118,23 @@ export class EvaluacionComponent implements OnInit {
     public dataService: DataService,
     private route: ActivatedRoute,
     private router: Router,
-    private workflowService: WorkflowService,
-    private scenarioService: ScenarioService
+    private scenarioService: ScenarioService,
+    private workflowService: WorkflowService
   ) {}
 
-  ngOnInit() {
-    this.versionService.version$.subscribe(version => {
+  ngOnInit(): void {
+    this.versionService.version$.subscribe(() => {
       this.isAIEnabled = this.versionService.isAIEnabled();
-      this.prepararFeedbackBase();
-      if (this.pacienteSeleccionado) {
-        this.calcularEstimacionComposicion(this.pacienteSeleccionado.id);
-      }
     });
 
     this.dataService.pacientes$.subscribe(pacientes => {
       this.pacientes = pacientes.filter(p => p.activo);
     });
 
-    this.scenarioService.activeProgress$.subscribe(progress => {
-      if (progress) {
-        const scenario = this.scenarioService.getScenario(progress.scenarioId);
-        this.scenarioPreset = scenario.patientPreset;
-        this.scenarioPatientName = scenario.patientName;
-        this.currentStep = 1;
-      } else {
-        this.scenarioPreset = null;
-        this.scenarioPatientName = null;
-        this.currentStep = 1;
-      }
-    });
-
-    // Verificar si viene un paciente específico desde la URL
     this.route.queryParams.subscribe(params => {
-      if (params['pacienteId']) {
-        const paciente = this.dataService.getPacienteById(params['pacienteId']);
+      const pacienteId = params['pacienteId'];
+      if (pacienteId) {
+        const paciente = this.dataService.getPacienteById(pacienteId);
         if (paciente) {
           this.seleccionarPaciente(paciente);
         }
@@ -158,12 +142,34 @@ export class EvaluacionComponent implements OnInit {
     });
   }
 
-  seleccionarPaciente(paciente: Paciente) {
-    this.currentStep = 1;
+  seleccionarPaciente(paciente: Paciente | null) {
+    if (!paciente) {
+      return;
+    }
+
     this.pacienteSeleccionado = paciente;
-    this.paciente.id = paciente.id;
-    this.paciente.nombre = `${paciente.nombre} ${paciente.apellido}`;
-    this.paciente.edad = paciente.edad?.toString() || '';
+    this.currentStep = 1;
+    this.paciente = {
+      ...this.paciente,
+      id: paciente.id,
+      nombre: `${paciente.nombre} ${paciente.apellido}`.trim(),
+      edad: paciente.edad ? paciente.edad.toString() : '',
+      peso: '',
+      altura: '',
+      actividad: 'sedentario',
+      objetivo: 'mantener',
+      masaGrasa: '',
+      masaMagra: ''
+    };
+
+    const ultimoRegistro = this.dataService.getRegistrosByPaciente(paciente.id)[0];
+    if (ultimoRegistro) {
+      this.paciente.peso = ultimoRegistro.peso.toString();
+      this.paciente.altura = ultimoRegistro.altura.toString();
+      this.paciente.actividad = ultimoRegistro.actividad;
+      this.paciente.objetivo = ultimoRegistro.objetivo;
+    }
+
     this.pautaNutricional = {
       calorias: 0,
       proteinas: 0,
@@ -172,17 +178,6 @@ export class EvaluacionComponent implements OnInit {
       recomendaciones: ''
     };
     this.resetMealPlan();
-    
-    // Si tiene historial, cargar datos del último registro
-    const ultimoRegistro = this.dataService.getRegistrosByPaciente(paciente.id)[0];
-    if (ultimoRegistro) {
-      this.paciente.peso = ultimoRegistro.peso.toString();
-      this.paciente.altura = ultimoRegistro.altura.toString();
-      this.paciente.actividad = ultimoRegistro.actividad;
-      this.paciente.objetivo = ultimoRegistro.objetivo;
-      this.paciente.masaGrasa = '';
-      this.paciente.masaMagra = '';
-    }
 
     this.calcularEstimacionComposicion(paciente.id);
     this.actualizarFlujoParaPaciente(paciente.id);
@@ -193,7 +188,6 @@ export class EvaluacionComponent implements OnInit {
       alert('Selecciona un paciente antes de calcular.');
       return;
     }
-
     const edad = this.obtenerEdadReferencia();
     const peso = parseFloat(this.paciente.peso);
     const altura = parseFloat(this.paciente.altura);
@@ -590,6 +584,30 @@ export class EvaluacionComponent implements OnInit {
 
     const edad = this.obtenerEdadReferencia();
     const peso = parseFloat(this.paciente.peso);
+    const altura = parseFloat(this.paciente.altura);
+
+    if (!edad || edad <= 0) {
+      errores.push('Completa una edad válida.');
+    }
+    if (!peso || peso <= 0) {
+      errores.push('Completa un peso válido.');
+    }
+    if (!altura || altura <= 0) {
+      errores.push('Completa una altura válida.');
+    }
+    if (!this.paciente.actividad) {
+      errores.push('Selecciona el nivel de actividad.');
+    }
+    if (!this.paciente.objetivo) {
+      errores.push('Selecciona el objetivo nutricional.');
+    }
+
+    if (errores.length) {
+      alert(`Revisa los datos del paciente antes de continuar:\n- ${errores.join('\n- ')}`);
+      return false;
+    }
+    return true;
+  }
 
   private validarDatosContraEscenario(): boolean {
     if (!this.scenarioPreset) {

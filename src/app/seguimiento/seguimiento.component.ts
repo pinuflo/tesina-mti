@@ -107,6 +107,10 @@ export class SeguimientoComponent implements OnInit {
 
   agregarSeguimiento() {
     if (!this.pacienteSeleccionado) return;
+    if (!this.flujoAsignado) {
+      alert('Configura un protocolo en Inicio antes de agregar seguimientos.');
+      return;
+    }
     
     const ahora = new Date();
     const pesoActual = this.registros.length > 0 ? this.registros[0].peso : 70;

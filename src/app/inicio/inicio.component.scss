@@ -1,0 +1,42 @@
+.wizard-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.4);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1050;
+	padding: 1rem;
+}
+
+.wizard-card {
+	background: #fff;
+	border-radius: 0.75rem;
+	width: 100%;
+	max-width: 720px;
+	box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+	display: flex;
+	flex-direction: column;
+}
+
+.wizard-header,
+.wizard-footer {
+	padding: 1rem 1.5rem;
+	border-bottom: 1px solid #e9ecef;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.wizard-footer {
+	border-top: 1px solid #e9ecef;
+	border-bottom: none;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+.wizard-body {
+	padding: 1.5rem;
+	max-height: 70vh;
+	overflow-y: auto;
+}

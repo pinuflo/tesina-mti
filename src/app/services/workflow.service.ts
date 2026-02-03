@@ -5,6 +5,7 @@ import {
   FlujoObjetivoFinal,
   FlujoResultado,
   FlujoTrabajo,
+  OrdenValidacion,
   PasoEjecucion,
   PasoFlujo,
   VersionMode
@@ -18,6 +19,31 @@ interface CompletePasoPayload {
   camposAutocompletados?: number;
   camposManuales?: number;
   tiempoMinutos?: number;
+}
+
+interface AssignOptions {
+  ordenValidacion?: OrdenValidacion;
+  iteracionEtiqueta?: string;
+  fechaAsignacion?: string;
+}
+
+interface ScenarioStepSeed {
+  pasoId: string;
+  facilidad: number;
+  camposAutocompletados: number;
+  camposManuales: number;
+  tiempoMinutos: number;
+}
+
+interface ScenarioSeed {
+  pacienteId: string;
+  flujoId: string;
+  modo: VersionMode;
+  pasosCompletados: ScenarioStepSeed[];
+  iteracionEtiqueta?: string;
+  ordenValidacion?: OrdenValidacion;
+  fechaAsignacion?: string;
+  offsetDias?: number;
 }
 
 @Injectable({
@@ -58,7 +84,12 @@ export class WorkflowService {
     return this.getAsignacionesByPaciente(pacienteId).find(a => a.estado !== 'completado');
   }
 
-  assignFlujoToPaciente(pacienteId: string, flujoId: string, modo: VersionMode): FlujoAsignado {
+  assignFlujoToPaciente(
+    pacienteId: string,
+    flujoId: string,
+    modo: VersionMode,
+    options: AssignOptions = {}
+  ): FlujoAsignado {
     const existentes = this.asignacionesSubject.value;
     const yaAsignado = existentes.find(a => a.pacienteId === pacienteId && a.estado !== 'completado');
     if (yaAsignado) {
@@ -71,11 +102,13 @@ export class WorkflowService {
       pacienteId,
       flujoId,
       modoEjecutado: modo,
-      fechaAsignacion: new Date().toISOString(),
+      fechaAsignacion: options.fechaAsignacion ?? new Date().toISOString(),
       estado: 'pendiente',
       pasoActualId: null,
       ejecucion: [],
-      objetivoFinal: flujo?.objetivoFinal
+      objetivoFinal: flujo?.objetivoFinal,
+      iteracionEtiqueta: options.iteracionEtiqueta,
+      ordenValidacion: options.ordenValidacion
     };
 
     const asignaciones = [...existentes, nuevaAsignacion];
@@ -335,11 +368,13 @@ export class WorkflowService {
       return;
     }
 
-    const escenarios = [
+    const escenarios: ScenarioSeed[] = [
       {
         pacienteId: 'pac_manual',
         flujoId: 'flujo_manual_sin_ia',
         modo: 'sin-ia' as VersionMode,
+        iteracionEtiqueta: 'Caso guía Lucía',
+        ordenValidacion: 'manual-primero',
         pasosCompletados: [
           {
             pasoId: 'pacientes_1',
@@ -361,6 +396,8 @@ export class WorkflowService {
         pacienteId: 'pac_ia',
         flujoId: 'flujo_asistido_ia',
         modo: 'con-ia' as VersionMode,
+        iteracionEtiqueta: 'Caso guía Diego',
+        ordenValidacion: 'ia-primero',
         pasosCompletados: [
           {
             pasoId: 'pacientes_ia_1',
@@ -377,7 +414,8 @@ export class WorkflowService {
             tiempoMinutos: 18
           }
         ]
-      }
+      },
+      ...this.getExperimentalValidationSeeds()
     ];
 
     escenarios.forEach(escenario => {
@@ -389,7 +427,19 @@ export class WorkflowService {
       if (yaAsignado) {
         return;
       }
-      const asignacion = this.assignFlujoToPaciente(escenario.pacienteId, escenario.flujoId, escenario.modo);
+      const fechaAsignacion = escenario.fechaAsignacion
+        ? escenario.fechaAsignacion
+        : this.buildFechaAsignacion(escenario.offsetDias ?? 0);
+      const asignacion = this.assignFlujoToPaciente(
+        escenario.pacienteId,
+        escenario.flujoId,
+        escenario.modo,
+        {
+          fechaAsignacion,
+          iteracionEtiqueta: escenario.iteracionEtiqueta,
+          ordenValidacion: escenario.ordenValidacion
+        }
+      );
       escenario.pasosCompletados.forEach(paso => {
         this.startPaso(asignacion.id, paso.pasoId);
         this.completePaso(asignacion.id, paso.pasoId, {
@@ -401,6 +451,161 @@ export class WorkflowService {
         });
       });
     });
+  }
+
+  private getExperimentalValidationSeeds(): ScenarioSeed[] {
+    return [
+      {
+        pacienteId: 'pac_validacion_01',
+        flujoId: 'flujo_manual_sin_ia',
+        modo: 'sin-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 01',
+        ordenValidacion: 'manual-primero',
+        offsetDias: -21,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_1',
+            facilidad: 2,
+            camposAutocompletados: 0,
+            camposManuales: 11,
+            tiempoMinutos: 34
+          },
+          {
+            pasoId: 'evaluacion_1',
+            facilidad: 2,
+            camposAutocompletados: 0,
+            camposManuales: 10,
+            tiempoMinutos: 42
+          }
+        ]
+      },
+      {
+        pacienteId: 'pac_validacion_02',
+        flujoId: 'flujo_asistido_ia',
+        modo: 'con-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 02',
+        ordenValidacion: 'ia-primero',
+        offsetDias: -20,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_ia_1',
+            facilidad: 4,
+            camposAutocompletados: 11,
+            camposManuales: 1,
+            tiempoMinutos: 13
+          },
+          {
+            pasoId: 'evaluacion_ia_1',
+            facilidad: 5,
+            camposAutocompletados: 12,
+            camposManuales: 1,
+            tiempoMinutos: 19
+          }
+        ]
+      },
+      {
+        pacienteId: 'pac_validacion_03',
+        flujoId: 'flujo_manual_sin_ia',
+        modo: 'sin-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 03',
+        ordenValidacion: 'manual-primero',
+        offsetDias: -19,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_1',
+            facilidad: 3,
+            camposAutocompletados: 0,
+            camposManuales: 9,
+            tiempoMinutos: 31
+          },
+          {
+            pasoId: 'evaluacion_1',
+            facilidad: 3,
+            camposAutocompletados: 0,
+            camposManuales: 8,
+            tiempoMinutos: 38
+          }
+        ]
+      },
+      {
+        pacienteId: 'pac_validacion_04',
+        flujoId: 'flujo_asistido_ia',
+        modo: 'con-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 04',
+        ordenValidacion: 'ia-primero',
+        offsetDias: -18,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_ia_1',
+            facilidad: 4,
+            camposAutocompletados: 10,
+            camposManuales: 2,
+            tiempoMinutos: 15
+          },
+          {
+            pasoId: 'evaluacion_ia_1',
+            facilidad: 4,
+            camposAutocompletados: 11,
+            camposManuales: 1,
+            tiempoMinutos: 17
+          }
+        ]
+      },
+      {
+        pacienteId: 'pac_validacion_05',
+        flujoId: 'flujo_manual_sin_ia',
+        modo: 'sin-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 05',
+        ordenValidacion: 'manual-primero',
+        offsetDias: -17,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_1',
+            facilidad: 2,
+            camposAutocompletados: 0,
+            camposManuales: 12,
+            tiempoMinutos: 36
+          },
+          {
+            pasoId: 'evaluacion_1',
+            facilidad: 2,
+            camposAutocompletados: 0,
+            camposManuales: 11,
+            tiempoMinutos: 41
+          }
+        ]
+      },
+      {
+        pacienteId: 'pac_validacion_06',
+        flujoId: 'flujo_asistido_ia',
+        modo: 'con-ia' as VersionMode,
+        iteracionEtiqueta: 'Iteración 06',
+        ordenValidacion: 'ia-primero',
+        offsetDias: -16,
+        pasosCompletados: [
+          {
+            pasoId: 'pacientes_ia_1',
+            facilidad: 5,
+            camposAutocompletados: 12,
+            camposManuales: 1,
+            tiempoMinutos: 12
+          },
+          {
+            pasoId: 'evaluacion_ia_1',
+            facilidad: 5,
+            camposAutocompletados: 12,
+            camposManuales: 1,
+            tiempoMinutos: 16
+          }
+        ]
+      }
+    ];
+  }
+
+  private buildFechaAsignacion(offsetDays: number): string {
+    const base = new Date();
+    base.setDate(base.getDate() + offsetDays);
+    return base.toISOString();
   }
 
   private createPaso(
