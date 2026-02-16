@@ -5,10 +5,12 @@ import { EvaluacionComponent } from './evaluacion/evaluacion.component';
 import { AnalisisComponent } from './analisis/analisis.component';
 import { SeguimientoComponent } from './seguimiento/seguimiento.component';
 import { ContactoComponent } from './contacto/contacto.component';
+import { FlowCatalogComponent } from './flujos/flow-catalog.component';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent },
   { path: 'pacientes', component: PacientesComponent },
+  { path: 'flujos', component: FlowCatalogComponent },
   { path: 'evaluacion', component: EvaluacionComponent },
   { path: 'analisis', component: AnalisisComponent },
   { path: 'seguimiento', component: SeguimientoComponent },

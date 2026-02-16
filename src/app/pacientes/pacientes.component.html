@@ -108,13 +108,16 @@
                   <th>Contacto</th>
                   <th>Edad</th>
                   <th>Estado</th>
-                  <th>Flujo</th>
                   <th>Historial</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let paciente of pacientes; let i = index">
+                <ng-container *ngFor="let paciente of pacientes; let i = index">
+                <tr [ngClass]="{
+                      'scenario-row': true,
+                      'scenario-row--active': isActiveScenarioPatient(paciente.id)
+                    }">
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="avatar me-3">
@@ -126,6 +129,9 @@
                       <div>
                         <div class="fw-bold">{{ paciente.nombre }} {{ paciente.apellido }}</div>
                         <small class="text-muted">Registrado: {{ paciente.fechaRegistro | date:'dd/MM/yyyy' }}</small>
+                        <div *ngIf="isActiveScenarioPatient(paciente.id)" class="scenario-lock-hint">
+                          Flujo en curso
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -146,28 +152,6 @@
                     </span>
                   </td>
                   <td>
-                    <div *ngIf="getAsignacionActiva(paciente.id) as asignacion">
-                      <span class="badge"
-                            [class]="asignacion.modoEjecutado === 'con-ia' ? 'bg-primary' : 'bg-dark'">
-                        {{ getNombreFlujo(asignacion.flujoId) }}
-                      </span>
-                      <div class="small text-muted mt-1" *ngIf="getTituloPasoActual(asignacion)">
-                        Paso actual: {{ getTituloPasoActual(asignacion) }}
-                      </div>
-                    </div>
-                    <div *ngIf="!getAsignacionActiva(paciente.id)" class="text-muted small">
-                      Sin protocolo configurado
-                      <div>
-                        <a [routerLink]="['/']"
-                           [queryParams]="{ setupPatient: paciente.id }"
-                           class="btn btn-link btn-sm p-0">
-                          <i class="fas fa-route me-1"></i>
-                          Configurar en Inicio
-                        </a>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
                     <div class="small">
                       <div><strong>{{ getHistorialPaciente(paciente.id).totalConsultas }}</strong> consultas</div>
                       <div *ngIf="getHistorialPaciente(paciente.id).ultimaConsulta">
@@ -180,39 +164,31 @@
                   </td>
                   <td>
                     <div class="btn-group-vertical btn-group-sm" role="group">
-                      <a [routerLink]="['/evaluacion']" 
-                         [queryParams]="{ pacienteId: paciente.id }"
-                         class="btn btn-primary btn-sm">
+                      <button type="button"
+                              class="btn btn-primary btn-sm"
+                              (click)="handleProtectedNavigation($event, paciente, '/evaluacion')"
+                              [attr.title]="getPatientLockTooltip(paciente.id)">
                         <i class="fas fa-clipboard-list me-1"></i>
                         Evaluar
-                      </a>
-                      <a [routerLink]="['/seguimiento']" 
-                         [queryParams]="{ pacienteId: paciente.id }"
-                         class="btn btn-info btn-sm">
+                      </button>
+                      <button type="button"
+                              class="btn btn-info btn-sm"
+                              (click)="handleProtectedNavigation($event, paciente, '/seguimiento')"
+                              [attr.title]="getPatientLockTooltip(paciente.id)">
                         <i class="fas fa-chart-line me-1"></i>
                         Historial
-                      </a>
+                      </button>
                       <button *ngIf="isAIEnabled" 
+                              type="button"
                               class="btn btn-warning btn-sm"
                               (click)="sugerirProximaPauta(paciente.id)">
                         <i class="fas fa-robot me-1"></i>
                         Sugerir IA
                       </button>
-                      <button class="btn btn-outline-secondary btn-sm"
-                              (click)="toggleEstadoPaciente(paciente)">
-                        <i [class]="paciente.activo ? 'fas fa-pause' : 'fas fa-play'" class="me-1"></i>
-                        {{ paciente.activo ? 'Pausar' : 'Activar' }}
-                      </button>
-                      <a *ngIf="!getAsignacionActiva(paciente.id)"
-                         [routerLink]="['/']"
-                         [queryParams]="{ setupPatient: paciente.id }"
-                         class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-route me-1"></i>
-                        Configurar protocolo
-                      </a>
                     </div>
                   </td>
                 </tr>
+                </ng-container>
               </tbody>
             </table>
           </div>

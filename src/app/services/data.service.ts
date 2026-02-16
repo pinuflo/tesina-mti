@@ -37,6 +37,11 @@ export class DataService {
     }
   }
 
+  private persistPacientes(pacientes: Paciente[]): void {
+    this.saveToStorage('pacientes', pacientes);
+    this.pacientesSubject.next(pacientes);
+  }
+
   private createFakeData() {
     const cohortPatients: Paciente[] = [
       {
@@ -321,12 +326,11 @@ export class DataService {
     ];
 
     // Guardar en localStorage y actualizar subjects
-    this.saveToStorage('pacientes', pacientesFake);
+    this.persistPacientes(pacientesFake);
     this.saveToStorage('registros', registrosFake);
     this.saveToStorage('seguimientos', seguimientosFake);
     this.saveToStorage('pautas', pautasFake);
 
-    this.pacientesSubject.next(pacientesFake);
     this.registrosSubject.next(registrosFake);
     this.seguimientosSubject.next(seguimientosFake);
     this.pautasSubject.next(pautasFake);
@@ -349,12 +353,13 @@ export class DataService {
     const nuevoPaciente: Paciente = {
       ...paciente,
       id: this.generateId(),
-      fechaRegistro: new Date()
+      fechaRegistro: new Date(),
+      historialFlujos: [],
+      flujoActivoId: undefined
     };
     
     const pacientes = [...this.pacientesSubject.value, nuevoPaciente];
-    this.saveToStorage('pacientes', pacientes);
-    this.pacientesSubject.next(pacientes);
+    this.persistPacientes(pacientes);
     
     return nuevoPaciente;
   }
@@ -363,8 +368,54 @@ export class DataService {
     const pacientes = this.pacientesSubject.value.map(p => 
       p.id === id ? { ...p, ...updates } : p
     );
-    this.saveToStorage('pacientes', pacientes);
-    this.pacientesSubject.next(pacientes);
+    this.persistPacientes(pacientes);
+  }
+
+  registrarAsignacionPaciente(
+    pacienteId: string,
+    flujoId: string,
+    responsable: string,
+    fechaAsignacion: string,
+    notas?: string
+  ): void {
+    let updated = false;
+    const pacientes = this.pacientesSubject.value.map(paciente => {
+      if (paciente.id !== pacienteId) {
+        return paciente;
+      }
+      updated = true;
+      const historial = paciente.historialFlujos ?? [];
+      const historialActualizado = historial.includes(flujoId)
+        ? historial
+        : [...historial, flujoId];
+      return {
+        ...paciente,
+        flujoActivoId: flujoId,
+        historialFlujos: historialActualizado,
+        fechaUltimaAsignacion: fechaAsignacion,
+        ultimoFlujoAsignadoPor: responsable,
+        notasUltimaAsignacion: notas ?? paciente.notasUltimaAsignacion
+      };
+    });
+
+    if (updated) {
+      this.persistPacientes(pacientes);
+    }
+  }
+
+  marcarFlujoCompletado(pacienteId: string, flujoId: string): void {
+    let updated = false;
+    const pacientes = this.pacientesSubject.value.map(paciente => {
+      if (paciente.id !== pacienteId || paciente.flujoActivoId !== flujoId) {
+        return paciente;
+      }
+      updated = true;
+      return { ...paciente, flujoActivoId: undefined };
+    });
+
+    if (updated) {
+      this.persistPacientes(pacientes);
+    }
   }
 
   // Métodos para gestionar registros nutricionales

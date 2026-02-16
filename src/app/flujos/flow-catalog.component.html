@@ -1,0 +1,285 @@
+<section class="catalog-wrapper">
+  <header class="catalog-header">
+    <div>
+      <p class="eyebrow">Experimentos A/B</p>
+      <h1>Catálogo de Flujos Prescritos</h1>
+      <p class="subtitle">
+        Diseña las plantillas que gobiernan los escenarios A1/A2/B1/B2. Cada cambio queda disponible para la
+        barra lateral y para la asignación directa desde Pacientes.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="chip" [class.active]="filterMode === 'todos'" (click)="onFilterChange('todos')">Todos</button>
+      <button class="chip" [class.active]="filterMode === 'sin-ia'" (click)="onFilterChange('sin-ia')">Manual</button>
+      <button class="chip" [class.active]="filterMode === 'con-ia'" (click)="onFilterChange('con-ia')">Con IA</button>
+      <button class="chip" [class.active]="filterMode === 'comparativo'" (click)="onFilterChange('comparativo')">Comparativo</button>
+    </div>
+    <div class="cta-group">
+      <button class="ghost" (click)="startNewFlow('sin-ia')">
+        <span>Plantilla Manual</span>
+        <small>Checklist clínico completo</small>
+      </button>
+      <button class="ghost" (click)="startNewFlow('con-ia')">
+        <span>Plantilla Con IA</span>
+        <small>Acciones asistidas con autocompletado</small>
+      </button>
+      <button class="ghost" (click)="startNewFlow('comparativo')">
+        <span>Modo Comparativo</span>
+        <small>Une pasos manuales + IA</small>
+      </button>
+    </div>
+  </header>
+
+  <div class="catalog-grid">
+    <aside class="catalog-list">
+      <div class="list-header">
+        <span class="list-title">Plantillas ({{ filteredFlujos.length }})</span>
+      </div>
+      <div class="flow-card" *ngFor="let flujo of filteredFlujos" (click)="selectFlujo(flujo)" [class.selected]="flujo.id === selectedFlujoId">
+        <div class="flow-card__head">
+          <div>
+            <p class="flow-name">{{ flujo.nombre }}</p>
+            <p class="flow-mode" [class.mode-ia]="flujo.modoObjetivo === 'con-ia'" [class.mode-comparativo]="flujo.modoObjetivo === 'comparativo'">
+              {{ flujo.modoObjetivo === 'con-ia' ? 'Con IA' : flujo.modoObjetivo === 'comparativo' ? 'Manual + IA' : 'Manual' }}
+            </p>
+          </div>
+          <span class="badge" [class.badge-active]="flujo.activo">{{ flujo.activo ? 'Activo' : 'Archivado' }}</span>
+        </div>
+        <p class="flow-description">{{ flujo.descripcion }}</p>
+        <div class="flow-metrics">
+          <span><strong>{{ flujo.pasos.length }}</strong> pasos</span>
+          <span><strong>{{ flujo.tiempoEstimadoMin }}</strong> min estimados</span>
+          <span><strong>{{ flujo.objetivos.length }}</strong> objetivos</span>
+        </div>
+      </div>
+      <div *ngIf="filteredFlujos.length === 0" class="empty-state">
+        <p>No hay plantillas para el filtro seleccionado. Genera una nueva para comenzar.</p>
+      </div>
+    </aside>
+
+    <section class="catalog-editor">
+      <ng-container *ngIf="draftFlujo as flujo; else placeholder">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Detalle de plantilla</p>
+              <h2>{{ flujo.nombre || 'Plantilla sin nombre' }}</h2>
+            </div>
+            <div class="panel-actions">
+              <button class="text" (click)="duplicarFlujo()" [disabled]="!flujo.id">Duplicar</button>
+              <button class="text danger" (click)="eliminarFlujo()" [disabled]="!flujo.id">Eliminar</button>
+            </div>
+          </div>
+
+          <div class="grid-form">
+            <label>
+              <span>Nombre</span>
+              <input type="text" [(ngModel)]="flujo.nombre" name="nombre" ngModelOptions="{standalone: true}" />
+            </label>
+            <label>
+              <span>Modo objetivo</span>
+              <select [(ngModel)]="flujo.modoObjetivo" name="modo" ngModelOptions="{standalone: true}">
+                <option value="sin-ia">Manual (Sin IA)</option>
+                <option value="con-ia">Asistido (Con IA)</option>
+                <option value="comparativo">Comparativo</option>
+              </select>
+            </label>
+            <label>
+              <span>Tiempo estimado (min)</span>
+              <input type="number" min="10" [(ngModel)]="flujo.tiempoEstimadoMin" name="tiempo" ngModelOptions="{standalone: true}" />
+            </label>
+            <label>
+              <span>Estado</span>
+              <select [(ngModel)]="flujo.activo" name="estado" ngModelOptions="{standalone: true}">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Archivado</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="block">
+            <span>Descripción</span>
+            <textarea rows="3" [(ngModel)]="flujo.descripcion" name="descripcion" ngModelOptions="{standalone: true}"></textarea>
+          </label>
+
+          <label class="block">
+            <span>Objetivos del flujo (uno por línea)</span>
+            <textarea rows="3" [(ngModel)]="objetivosInput" name="objetivos" ngModelOptions="{standalone: true}"></textarea>
+          </label>
+
+          <div class="objective-panel">
+            <div>
+              <label class="block">
+                <span>Resultado final esperado</span>
+                <textarea rows="2" [(ngModel)]="flujo.objetivoFinal!.descripcion" name="objetivoDesc" ngModelOptions="{standalone: true}"></textarea>
+              </label>
+              <div class="objective-grid">
+                <label>
+                  <span>Calorías</span>
+                  <input type="number" min="0" [(ngModel)]="flujo.objetivoFinal!.caloriasObjetivo" name="calorias" ngModelOptions="{standalone: true}" />
+                </label>
+                <label>
+                  <span>Proteínas</span>
+                  <input type="number" min="0" [(ngModel)]="flujo.objetivoFinal!.proteinasObjetivo" name="proteinas" ngModelOptions="{standalone: true}" />
+                </label>
+                <label>
+                  <span>Carbohidratos</span>
+                  <input type="number" min="0" [(ngModel)]="flujo.objetivoFinal!.carbohidratosObjetivo" name="carbos" ngModelOptions="{standalone: true}" />
+                </label>
+                <label>
+                  <span>Grasas</span>
+                  <input type="number" min="0" [(ngModel)]="flujo.objetivoFinal!.grasasObjetivo" name="grasas" ngModelOptions="{standalone: true}" />
+                </label>
+              </div>
+            </div>
+            <label class="block">
+              <span>Menú sugerido (uno por línea)</span>
+              <textarea rows="4" [(ngModel)]="menuObjetivoInput" name="menu" ngModelOptions="{standalone: true}"></textarea>
+            </label>
+          </div>
+
+          <section class="steps">
+            <div class="steps-header">
+              <div>
+                <p class="eyebrow">Pasos del flujo</p>
+                <h3>{{ flujo.pasos.length }} pasos definidos</h3>
+              </div>
+              <button class="text" (click)="resetStepDraft()">Limpiar borrador</button>
+            </div>
+
+            <article class="step-card" *ngFor="let paso of flujo.pasos; let i = index">
+              <div class="step-head">
+                <div>
+                  <span class="step-index">#{{ i + 1 }}</span>
+                  <input type="text" [attr.name]="'titulo_' + i" [(ngModel)]="paso.titulo" ngModelOptions="{standalone: true}" />
+                  <p class="step-meta">
+                    <span class="meta-pill">{{ paso.modulo | titlecase }}</span>
+                    <span class="meta-pill" [class.ia]="paso.modo === 'con-ia' || paso.requiereIA">{{ paso.modo === 'con-ia' || paso.requiereIA ? 'IA' : 'Manual' }}</span>
+                  </p>
+                </div>
+                <div class="step-actions">
+                  <button (click)="moveStep(paso.id, 'up')" [disabled]="i === 0">▲</button>
+                  <button (click)="moveStep(paso.id, 'down')" [disabled]="i === flujo.pasos.length - 1">▼</button>
+                  <button class="danger" (click)="removeStep(paso.id)"><span>Eliminar</span></button>
+                </div>
+              </div>
+              <div class="step-body">
+                <label class="block">
+                  <span>Descripción</span>
+                  <textarea rows="2" [attr.name]="'desc_' + i" [(ngModel)]="paso.descripcion" ngModelOptions="{standalone: true}"></textarea>
+                </label>
+                <div class="step-grid">
+                  <label>
+                    <span>Módulo</span>
+                    <select [attr.name]="'mod_' + i" [(ngModel)]="paso.modulo" ngModelOptions="{standalone: true}">
+                      <option value="pacientes">Pacientes</option>
+                      <option value="evaluacion">Evaluación</option>
+                      <option value="analisis">Análisis</option>
+                      <option value="seguimiento">Seguimiento</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Modo del paso</span>
+                    <select [attr.name]="'modo_' + i" [(ngModel)]="paso.modo" ngModelOptions="{standalone: true}">
+                      <option value="sin-ia">Sin IA</option>
+                      <option value="con-ia">Con IA</option>
+                      <option value="mixto">Mixto</option>
+                    </select>
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" [checked]="paso.requiereIA" (change)="paso.requiereIA = !paso.requiereIA" />
+                    <span>Este paso requiere IA</span>
+                  </label>
+                </div>
+                <div class="step-grid">
+                  <label class="block">
+                    <span>Checklist (uno por línea)</span>
+                    <textarea rows="2" [attr.name]="'check_' + i" [ngModel]="checklistBuffers[paso.id]" (ngModelChange)="updateChecklist(paso.id, $event)" ngModelOptions="{standalone: true}"></textarea>
+                  </label>
+                  <label class="block">
+                    <span>Acciones IA / Atajos</span>
+                    <textarea rows="2" [attr.name]="'ia_' + i" [ngModel]="accionesBuffers[paso.id]" (ngModelChange)="updateAcciones(paso.id, $event)" ngModelOptions="{standalone: true}"></textarea>
+                  </label>
+                </div>
+              </div>
+            </article>
+
+            <article class="step-card muted">
+              <div class="step-head">
+                <h4>Nuevo paso</h4>
+              </div>
+              <div class="step-body">
+                <div class="step-grid">
+                  <label>
+                    <span>Título</span>
+                    <input type="text" [(ngModel)]="stepDraft.titulo" name="draftTitulo" ngModelOptions="{standalone: true}" />
+                  </label>
+                  <label>
+                    <span>Módulo</span>
+                    <select [(ngModel)]="stepDraft.modulo" name="stepModulo" ngModelOptions="{standalone: true}">
+                      <option value="pacientes">Pacientes</option>
+                      <option value="evaluacion">Evaluación</option>
+                      <option value="analisis">Análisis</option>
+                      <option value="seguimiento">Seguimiento</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Modo</span>
+                    <select [(ngModel)]="stepDraft.modo" name="stepModo" ngModelOptions="{standalone: true}">
+                      <option value="sin-ia">Sin IA</option>
+                      <option value="con-ia">Con IA</option>
+                      <option value="mixto">Mixto</option>
+                    </select>
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" [(ngModel)]="stepDraft.requiereIA" name="stepIA" ngModelOptions="{standalone: true}" />
+                    <span>Requiere IA</span>
+                  </label>
+                </div>
+                <label class="block">
+                  <span>Descripción</span>
+                  <textarea rows="2" [(ngModel)]="stepDraft.descripcion" name="stepDesc" ngModelOptions="{standalone: true}"></textarea>
+                </label>
+                <div class="step-grid">
+                  <label class="block">
+                    <span>Checklist</span>
+                    <textarea rows="2" [(ngModel)]="nuevoPasoChecklist" name="stepChecklist" ngModelOptions="{standalone: true}"></textarea>
+                  </label>
+                  <label class="block">
+                    <span>Acciones IA</span>
+                    <textarea rows="2" [(ngModel)]="nuevoPasoAcciones" name="stepAcciones" ngModelOptions="{standalone: true}"></textarea>
+                  </label>
+                </div>
+                <div class="step-footer">
+                  <button class="primary" (click)="addStep()">Agregar paso</button>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <div class="feedback" *ngIf="formErrors.length > 0">
+            <p>Revisa antes de guardar:</p>
+            <ul>
+              <li *ngFor="let error of formErrors">{{ error }}</li>
+            </ul>
+          </div>
+          <div class="feedback success" *ngIf="successMessage">
+            {{ successMessage }}
+          </div>
+
+          <div class="actions">
+            <button class="primary" (click)="guardarFlujo()">Guardar plantilla</button>
+            <button class="secondary" (click)="cancelarEdicion()">Cancelar</button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #placeholder>
+        <div class="placeholder">
+          <h3>Selecciona una plantilla para editar</h3>
+          <p>Crea una nueva variante o edita las existentes para habilitar los escenarios controlados en el wizard.</p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+</section>

@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { ScenarioService, ScenarioDefinition, ScenarioState } from '../../services/scenario.service';
 import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-scenario-wizard',
@@ -17,12 +18,13 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
   visitId: string | null = null;
   completedVisits: string[] = [];
   loading = true;
+  private lastVisitRoute: string | null = null;
 
   @Output() scenarioChange = new EventEmitter<boolean>();
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private scenarioService: ScenarioService) {}
+  constructor(private scenarioService: ScenarioService, private router: Router) {}
 
   ngOnInit(): void {
     this.scenarios = this.scenarioService.getScenarios();
@@ -36,11 +38,13 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
           this.visitId = null;
           this.completedVisits = [];
           this.scenarioChange.emit(false);
+          this.lastVisitRoute = null;
         } else {
           this.currentScenario = this.scenarioService.getScenario(progress.scenarioId);
           this.visitId = progress.visitId;
           this.completedVisits = progress.completedVisits;
           this.scenarioChange.emit(true);
+          this.navigateToCurrentVisit();
         }
         this.loading = false;
       })
@@ -60,10 +64,9 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
 
   startScenario(id: string) {
     this.scenarioService.startScenario(id as any);
-  }
-
-  completeVisit() {
-    this.scenarioService.completeVisit();
+    const scenario = this.scenarioService.getScenario(id as any);
+    const firstRoute = scenario.visits[0]?.route;
+    this.navigateToRoute(firstRoute);
   }
 
   resetScenario(id: string) {
@@ -91,5 +94,21 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
       default:
         return 'state-idle';
     }
+  }
+
+  private navigateToCurrentVisit(): void {
+    const route = this.currentVisit?.route;
+    this.navigateToRoute(route);
+  }
+
+  private navigateToRoute(route?: string): void {
+    if (!route) {
+      return;
+    }
+    if (this.lastVisitRoute === route) {
+      return;
+    }
+    this.lastVisitRoute = route;
+    this.router.navigate(['/', route]);
   }
 }

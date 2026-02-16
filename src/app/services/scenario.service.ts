@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { VersionMode, ScenarioPatientPreset } from '../models/nutricion.models';
+import { VersionMode, ScenarioPatientPreset, OrdenValidacion, FlujoTrabajo } from '../models/nutricion.models';
 import { DataService } from './data.service';
+import { WorkflowService } from './workflow.service';
 
 export type ScenarioId = 'A1' | 'A2' | 'B1' | 'B2';
 export type ScenarioState = 'idle' | 'in-progress' | 'completed';
@@ -10,9 +11,11 @@ export interface ScenarioDefinition {
   id: ScenarioId;
   title: string;
   patientName: string;
+  patientId: string;
   mode: VersionMode;
   description: string;
   patientPreset: ScenarioPatientPreset;
+  flujoId: string;
   visits: ScenarioVisit[];
 }
 
@@ -22,6 +25,7 @@ export interface ScenarioVisit {
   instructions: string[];
   expectedOutcome: string;
   targetMinutes: number;
+  route: string;
 }
 
 export interface ActiveScenarioProgress {
@@ -44,6 +48,7 @@ export class ScenarioService {
       id: 'A1',
       title: 'Paciente A / Manual',
       patientName: 'Lucía Pérez',
+      patientId: 'pac_manual',
       mode: 'sin-ia',
       description: 'Flujo manual tradicional para paciente A.',
       patientPreset: {
@@ -56,12 +61,14 @@ export class ScenarioService {
         masaMagra: 47,
         notas: 'Registrar Peso, Altura, Masa grasa/magra y objetivo "Definir plan mediterráneo 1.850 kcal".'
       },
+      flujoId: 'flujo_manual_sin_ia',
       visits: this.buildStandardVisits('sin-ia')
     },
     {
       id: 'A2',
       title: 'Paciente A / IA',
       patientName: 'Lucía Pérez',
+      patientId: 'pac_manual',
       mode: 'con-ia',
       description: 'Flujo asistido con IA para paciente A.',
       patientPreset: {
@@ -72,12 +79,14 @@ export class ScenarioService {
         objetivo: 'perder',
         notas: 'Permitir que la IA estime masa grasa/magra. Verificar que IA autocomplete hábitos y recordatorio 24h.'
       },
+      flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
     },
     {
       id: 'B1',
       title: 'Paciente B / Manual',
       patientName: 'Diego Torres',
+      patientId: 'pac_ia',
       mode: 'sin-ia',
       description: 'Flujo manual para paciente B.',
       patientPreset: {
@@ -90,12 +99,14 @@ export class ScenarioService {
         masaMagra: 58,
         notas: 'Registrar antecedentes hipertensión y definir objetivo de recomposición (82kg a 79kg).'
       },
+      flujoId: 'flujo_manual_sin_ia',
       visits: this.buildStandardVisits('sin-ia')
     },
     {
       id: 'B2',
       title: 'Paciente B / IA',
       patientName: 'Diego Torres',
+      patientId: 'pac_ia',
       mode: 'con-ia',
       description: 'Flujo asistido con IA para paciente B.',
       patientPreset: {
@@ -106,6 +117,7 @@ export class ScenarioService {
         objetivo: 'mantener',
         notas: 'Carga mínima manual: Peso, Altura, Antecedente HTA. IA debe sugerir objetivo 2.100 kcal y lista compras.'
       },
+      flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
     }
   ];
@@ -116,7 +128,11 @@ export class ScenarioService {
   private activeProgressSubject = new BehaviorSubject<ActiveScenarioProgress | null>(this.loadProgress());
   activeProgress$ = this.activeProgressSubject.asObservable();
 
-  constructor(private dataService: DataService) {}
+  constructor(private dataService: DataService, private workflowService: WorkflowService) {
+    this.workflowService.asignaciones$.subscribe(() => {
+      this.syncProgressWithWorkflow();
+    });
+  }
 
   getScenario(id: ScenarioId): ScenarioDefinition {
     const found = this.scenarios.find(s => s.id === id);
@@ -148,6 +164,7 @@ export class ScenarioService {
       return;
     }
     this.dataService.resetToSeedData();
+    this.syncScenarioAssignment(scenario);
     Object.keys(states).forEach(key => {
       const k = key as ScenarioId;
       if (states[k] === 'in-progress') {
@@ -168,35 +185,6 @@ export class ScenarioService {
     this.persistProgress(progress);
   }
 
-  completeVisit(): void {
-    const progress = this.activeProgressSubject.value;
-    if (!progress) {
-      return;
-    }
-
-    const scenario = this.getScenario(progress.scenarioId);
-    const currentVisitIndex = scenario.visits.findIndex(v => v.id === progress.visitId);
-    if (currentVisitIndex === -1) {
-      return;
-    }
-
-    const completedVisits = [...progress.completedVisits, progress.visitId];
-    const nextVisit = scenario.visits[currentVisitIndex + 1];
-
-    if (!nextVisit) {
-      this.finishScenario(progress.scenarioId, completedVisits);
-      return;
-    }
-
-    const updatedProgress: ActiveScenarioProgress = {
-      ...progress,
-      completedVisits,
-      visitId: nextVisit.id,
-      stepIndex: currentVisitIndex + 1
-    };
-    this.persistProgress(updatedProgress);
-  }
-
   resetScenario(id: ScenarioId): void {
     const states = { ...this.scenarioStatesSubject.value };
     states[id] = 'idle';
@@ -215,6 +203,86 @@ export class ScenarioService {
     } catch (error) {
       console.error('Error clearing scenario history', error);
     }
+  }
+
+  private syncScenarioAssignment(scenario: ScenarioDefinition): void {
+    const orden: OrdenValidacion = scenario.mode === 'con-ia' ? 'ia-primero' : 'manual-primero';
+    try {
+      this.workflowService.assignFlujoToPaciente(
+        scenario.patientId,
+        scenario.flujoId,
+        scenario.mode,
+        {
+          ordenValidacion: orden,
+          iteracionEtiqueta: `${scenario.patientName} · ${scenario.mode === 'con-ia' ? 'Con IA' : 'Sin IA'}`,
+          responsable: 'Scenario Wizard',
+          forceReassign: true
+        }
+      );
+    } catch (error) {
+      console.error('Error sincronizando flujo del escenario', error);
+    }
+  }
+
+  private syncProgressWithWorkflow(): void {
+    const progress = this.activeProgressSubject.value;
+    if (!progress) {
+      return;
+    }
+
+    const scenario = this.getScenario(progress.scenarioId);
+    const flujo = this.workflowService.getFlujoById(scenario.flujoId);
+    const asignacion = this.workflowService.getAsignacionActiva(scenario.patientId);
+    if (!flujo || !asignacion || asignacion.flujoId !== scenario.flujoId) {
+      return;
+    }
+
+    const sequentiallyCompleted = this.getCompletedVisitsFromWorkflow(flujo, scenario.visits, asignacion.ejecucion);
+    const hasChanges =
+      sequentiallyCompleted.length !== progress.completedVisits.length ||
+      sequentiallyCompleted.some((id, index) => progress.completedVisits[index] !== id);
+
+    if (!hasChanges) {
+      return;
+    }
+
+    if (sequentiallyCompleted.length === scenario.visits.length) {
+      this.finishScenario(scenario.id, sequentiallyCompleted);
+      return;
+    }
+
+    const nextVisit = scenario.visits[sequentiallyCompleted.length];
+    if (!nextVisit) {
+      return;
+    }
+
+    const updatedProgress: ActiveScenarioProgress = {
+      ...progress,
+      completedVisits: sequentiallyCompleted,
+      visitId: nextVisit.id,
+      stepIndex: sequentiallyCompleted.length
+    };
+    this.persistProgress(updatedProgress);
+  }
+
+  private getCompletedVisitsFromWorkflow(
+    flujo: FlujoTrabajo,
+    visits: ScenarioVisit[],
+    ejecuciones: { pasoId: string; fin?: string }[]
+  ): string[] {
+    const completed: string[] = [];
+    for (const visit of visits) {
+      const pasosModulo = flujo.pasos.filter(paso => paso.modulo === visit.route);
+      const moduloCompletado = pasosModulo.length === 0
+        ? true
+        : pasosModulo.every(paso => ejecuciones.some(e => e.pasoId === paso.id && !!e.fin));
+      if (moduloCompletado) {
+        completed.push(visit.id);
+      } else {
+        break;
+      }
+    }
+    return completed;
   }
 
   private finishScenario(id: ScenarioId, completedVisits: string[]): void {
@@ -250,7 +318,8 @@ export class ScenarioService {
               'Documentar cálculos de TMB inicial'
             ],
         expectedOutcome: 'Ficha completa + objetivos energéticos definidos.',
-        targetMinutes: ia ? 25 : 45
+          targetMinutes: ia ? 25 : 45,
+          route: 'pacientes'
       },
       {
         id: 'visita_2',
@@ -267,7 +336,8 @@ export class ScenarioService {
               'Registrar pauta manual en seguimiento'
             ],
         expectedOutcome: 'Plan alimentario alineado con pauta mediterránea 1800 kcal.',
-        targetMinutes: ia ? 20 : 35
+          targetMinutes: ia ? 20 : 35,
+          route: 'evaluacion'
       },
       {
         id: 'visita_3',
@@ -284,7 +354,8 @@ export class ScenarioService {
               'Comparar progreso con objetivo final'
             ],
         expectedOutcome: 'Informe con riesgos y acciones priorizadas.',
-        targetMinutes: ia ? 15 : 25
+          targetMinutes: ia ? 15 : 25,
+          route: 'analisis'
       },
       {
         id: 'visita_4',
@@ -301,7 +372,8 @@ export class ScenarioService {
               'Cerrar flujo con checklist de consistencia'
             ],
         expectedOutcome: 'Resultado final documentado con mismo plan para ambos modos.',
-        targetMinutes: ia ? 15 : 30
+          targetMinutes: ia ? 15 : 30,
+          route: 'seguimiento'
       }
     ];
   }

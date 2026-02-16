@@ -11,6 +11,9 @@ export interface Paciente {
   activo: boolean;
   flujoActivoId?: string;
   historialFlujos?: string[];
+  fechaUltimaAsignacion?: string;
+  ultimoFlujoAsignadoPor?: string;
+  notasUltimaAsignacion?: string;
 }
 
 export interface RegistroNutricional {
@@ -153,6 +156,8 @@ export interface FlujoAsignado {
   objetivoFinal?: FlujoObjetivoFinal;
   iteracionEtiqueta?: string;
   ordenValidacion?: OrdenValidacion;
+  responsableAsignacion?: string;
+  notasAsignacion?: string;
 }
 
 export interface MealPortion {

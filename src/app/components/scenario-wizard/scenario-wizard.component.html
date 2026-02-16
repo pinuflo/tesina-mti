@@ -94,9 +94,9 @@
         <ul>
           <li *ngFor="let instruction of currentVisit.instructions">{{ instruction }}</li>
         </ul>
-        <div class="actions">
-          <button class="btn btn-success" (click)="completeVisit()">Completar paso</button>
-        </div>
+        <p class="text-muted small mb-0">
+          Completa las acciones en el módulo indicado para avanzar automáticamente al siguiente paso.
+        </p>
       </div>
 
       <div class="summary" *ngIf="!currentVisit">

@@ -25,6 +25,9 @@ interface AssignOptions {
   ordenValidacion?: OrdenValidacion;
   iteracionEtiqueta?: string;
   fechaAsignacion?: string;
+  responsable?: string;
+  notas?: string;
+  forceReassign?: boolean;
 }
 
 interface ScenarioStepSeed {
@@ -44,6 +47,8 @@ interface ScenarioSeed {
   ordenValidacion?: OrdenValidacion;
   fechaAsignacion?: string;
   offsetDias?: number;
+  responsable?: string;
+  notas?: string;
 }
 
 @Injectable({
@@ -62,6 +67,69 @@ export class WorkflowService {
   constructor(private logService: WorkflowLogService, private dataService: DataService) {
     this.loadData();
     this.seedScenarioAssignments();
+  }
+
+  createFlujo(flujo: FlujoTrabajo): FlujoTrabajo {
+    const normalizado = this.normalizeFlujoData(flujo);
+    const flujos = [...this.flujosSubject.value, normalizado];
+    this.setFlujos(flujos);
+    return normalizado;
+  }
+
+  saveFlujo(flujo: FlujoTrabajo): FlujoTrabajo {
+    if (!flujo.id || flujo.id.trim().length === 0) {
+      return this.createFlujo(flujo);
+    }
+    const normalizado = this.normalizeFlujoData(flujo, flujo.id);
+    const flujos = [...this.flujosSubject.value];
+    const index = flujos.findIndex(f => f.id === normalizado.id);
+    if (index === -1) {
+      flujos.push(normalizado);
+    } else {
+      flujos[index] = normalizado;
+    }
+    this.setFlujos(flujos);
+    return normalizado;
+  }
+
+  deleteFlujo(flujoId: string): boolean {
+    const enUso = this.asignacionesSubject.value.some(asignacion => asignacion.flujoId === flujoId);
+    if (enUso) {
+      return false;
+    }
+    const flujos = this.flujosSubject.value.filter(f => f.id !== flujoId);
+    if (flujos.length === this.flujosSubject.value.length) {
+      return false;
+    }
+    this.setFlujos(flujos);
+    return true;
+  }
+
+  duplicateFlujo(flujoId: string): FlujoTrabajo | null {
+    const original = this.getFlujoById(flujoId);
+    if (!original) {
+      return null;
+    }
+
+    const copia: FlujoTrabajo = {
+      ...original,
+      id: '',
+      nombre: `${original.nombre} (copia)`,
+      activo: false,
+      pasos: original.pasos.map(paso => ({
+        ...paso,
+        id: ''
+      })),
+      objetivos: [...original.objetivos],
+      objetivoFinal: original.objetivoFinal
+        ? {
+            ...original.objetivoFinal,
+            menuSugerido: [...(original.objetivoFinal.menuSugerido ?? [])]
+          }
+        : undefined
+    };
+
+    return this.createFlujo(copia);
   }
 
   getFlujos(): FlujoTrabajo[] {
@@ -90,29 +158,49 @@ export class WorkflowService {
     modo: VersionMode,
     options: AssignOptions = {}
   ): FlujoAsignado {
-    const existentes = this.asignacionesSubject.value;
-    const yaAsignado = existentes.find(a => a.pacienteId === pacienteId && a.estado !== 'completado');
-    if (yaAsignado) {
-      return yaAsignado;
+    let asignaciones = [...this.asignacionesSubject.value];
+    const indexExistente = asignaciones.findIndex(a => a.pacienteId === pacienteId && a.estado !== 'completado');
+    if (indexExistente !== -1) {
+      const existente = asignaciones[indexExistente];
+      if (!options.forceReassign) {
+        return existente;
+      }
+      asignaciones.splice(indexExistente, 1);
+      this.dataService.marcarFlujoCompletado(pacienteId, existente.flujoId);
     }
 
     const flujo = this.getFlujoById(flujoId);
+    if (!flujo) {
+      throw new Error(`No se encontró la plantilla ${flujoId}`);
+    }
+
+    const responsable = options.responsable ?? 'Sistema de validación';
+    const fechaAsignacion = options.fechaAsignacion ?? new Date().toISOString();
     const nuevaAsignacion: FlujoAsignado = {
       id: this.generateId(),
       pacienteId,
       flujoId,
       modoEjecutado: modo,
-      fechaAsignacion: options.fechaAsignacion ?? new Date().toISOString(),
+      fechaAsignacion,
       estado: 'pendiente',
       pasoActualId: null,
       ejecucion: [],
       objetivoFinal: flujo?.objetivoFinal,
       iteracionEtiqueta: options.iteracionEtiqueta,
-      ordenValidacion: options.ordenValidacion
+      ordenValidacion: options.ordenValidacion,
+      responsableAsignacion: responsable,
+      notasAsignacion: options.notas
     };
 
-    const asignaciones = [...existentes, nuevaAsignacion];
+    asignaciones = [...asignaciones, nuevaAsignacion];
     this.setAsignaciones(asignaciones);
+    this.dataService.registrarAsignacionPaciente(
+      pacienteId,
+      flujoId,
+      responsable,
+      fechaAsignacion,
+      options.notas
+    );
     return nuevaAsignacion;
   }
 
@@ -188,6 +276,7 @@ export class WorkflowService {
       if (completados.length === pasosOrdenados.length) {
         asignacion.estado = 'completado';
         asignacion.resultado = this.calcularResultado(asignacion);
+        this.dataService.marcarFlujoCompletado(asignacion.pacienteId, asignacion.flujoId);
       }
     }
 
@@ -437,7 +526,9 @@ export class WorkflowService {
         {
           fechaAsignacion,
           iteracionEtiqueta: escenario.iteracionEtiqueta,
-          ordenValidacion: escenario.ordenValidacion
+          ordenValidacion: escenario.ordenValidacion,
+          responsable: escenario.responsable ?? 'Semilla automática',
+          notas: escenario.notas ?? 'Asignación precargada para validar flujos.'
         }
       );
       escenario.pasosCompletados.forEach(paso => {
@@ -630,6 +721,47 @@ export class WorkflowService {
       checklist,
       accionesIA,
       estimacionMinutos: requiereIA ? 15 : 25
+    };
+  }
+
+  private normalizeFlujoData(flujo: FlujoTrabajo, forcedId?: string): FlujoTrabajo {
+    const flujoId = forcedId ?? (flujo.id && flujo.id.trim().length > 0 ? flujo.id : this.generateId());
+    const pasosOrdenados = (flujo.pasos ?? [])
+      .map((paso, index) => {
+        const pasoId = paso.id && paso.id.trim().length > 0
+          ? paso.id
+          : `${flujoId}_paso_${index + 1}_${this.generateId()}`;
+        return {
+          ...paso,
+          id: pasoId,
+          checklist: [...(paso.checklist ?? [])],
+          accionesIA: paso.requiereIA ? [...(paso.accionesIA ?? [])] : [],
+          orden: paso.orden ?? index + 1
+        };
+      })
+      .sort((a, b) => a.orden - b.orden)
+      .map((paso, index) => ({ ...paso, orden: index + 1 }));
+
+    const objetivos = (flujo.objetivos ?? [])
+      .map(o => o.trim())
+      .filter(obj => obj.length > 0);
+
+    const objetivoFinal = flujo.objetivoFinal
+      ? {
+          ...flujo.objetivoFinal,
+          menuSugerido: [...(flujo.objetivoFinal.menuSugerido ?? [])]
+        }
+      : undefined;
+
+    return {
+      ...flujo,
+      id: flujoId,
+      nombre: flujo.nombre.trim(),
+      descripcion: flujo.descripcion.trim(),
+      objetivos,
+      pasos: pasosOrdenados,
+      tiempoEstimadoMin: flujo.tiempoEstimadoMin ?? pasosOrdenados.length * 20,
+      objetivoFinal
     };
   }
 

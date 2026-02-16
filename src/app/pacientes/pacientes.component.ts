@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
 import { VersionService } from '../services/version.service';
-import { Paciente, FlujoAsignado, FlujoTrabajo } from '../models/nutricion.models';
-import { WorkflowService } from '../services/workflow.service';
+import { ScenarioService } from '../services/scenario.service';
+import { Paciente } from '../models/nutricion.models';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './pacientes.component.html',
   styleUrl: './pacientes.component.scss'
 })
@@ -18,8 +18,8 @@ export class PacientesComponent implements OnInit {
   pacientes: Paciente[] = [];
   isAIEnabled = false;
   showAddForm = false;
-  flujos: FlujoTrabajo[] = [];
-  asignaciones: FlujoAsignado[] = [];
+  currentScenarioPatientId: string | null = null;
+  currentScenarioPatientName: string | null = null;
   
   nuevoPaciente = {
     nombre: '',
@@ -33,7 +33,8 @@ export class PacientesComponent implements OnInit {
   constructor(
     private dataService: DataService,
     private versionService: VersionService,
-    private workflowService: WorkflowService
+    private scenarioService: ScenarioService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -41,16 +42,19 @@ export class PacientesComponent implements OnInit {
       this.pacientes = pacientes;
     });
 
-    this.versionService.version$.subscribe(version => {
+    this.versionService.version$.subscribe(() => {
       this.isAIEnabled = this.versionService.isAIEnabled();
     });
 
-    this.workflowService.flujos$.subscribe(flujos => {
-      this.flujos = flujos;
-    });
-
-    this.workflowService.asignaciones$.subscribe(asignaciones => {
-      this.asignaciones = asignaciones;
+    this.scenarioService.activeProgress$.subscribe(progress => {
+      if (!progress) {
+        this.currentScenarioPatientId = null;
+        this.currentScenarioPatientName = null;
+        return;
+      }
+      const scenario = this.scenarioService.getScenario(progress.scenarioId);
+      this.currentScenarioPatientId = scenario.patientId;
+      this.currentScenarioPatientName = scenario.patientName;
     });
   }
 
@@ -69,10 +73,6 @@ export class PacientesComponent implements OnInit {
     }
   }
 
-  toggleEstadoPaciente(paciente: Paciente) {
-    this.dataService.updatePaciente(paciente.id, { activo: !paciente.activo });
-  }
-
   getHistorialPaciente(pacienteId: string) {
     const registros = this.dataService.getRegistrosByPaciente(pacienteId);
     const seguimientos = this.dataService.getSeguimientosByPaciente(pacienteId);
@@ -86,36 +86,43 @@ export class PacientesComponent implements OnInit {
   }
 
   sugerirProximaPauta(pacienteId: string) {
+    if (this.isPatientLocked(pacienteId)) {
+      alert(this.buildLockMessage());
+      return;
+    }
     if (this.isAIEnabled) {
       const sugerencia = this.dataService.generarSugerenciaIA(pacienteId);
       alert('🤖 SUGERENCIA DE IA PARA PRÓXIMA PAUTA:\n\n' + sugerencia);
     }
   }
 
-  getAsignacionActiva(pacienteId: string): FlujoAsignado | undefined {
-    return this.workflowService.getAsignacionActiva(pacienteId);
+  handleProtectedNavigation(event: Event, paciente: Paciente, route: string) {
+    if (this.isPatientLocked(paciente.id)) {
+      event.preventDefault();
+      event.stopPropagation();
+      alert(this.buildLockMessage());
+      return;
+    }
+    this.router.navigate([route], { queryParams: { pacienteId: paciente.id } });
   }
 
-  getNombreFlujo(flujoId: string): string {
-    return this.flujos.find(f => f.id === flujoId)?.nombre ?? 'Flujo personalizado';
+  isActiveScenarioPatient(pacienteId: string): boolean {
+    return !!this.currentScenarioPatientId && this.currentScenarioPatientId === pacienteId;
   }
 
-  getTituloPasoActual(asignacion: FlujoAsignado): string {
-    const flujo = this.flujos.find(f => f.id === asignacion.flujoId);
-    if (!flujo) {
-      return 'Sin referencia';
-    }
-    if (asignacion.estado === 'completado') {
-      return 'Flujo completado';
-    }
+  isPatientLocked(pacienteId: string): boolean {
+    return !!this.currentScenarioPatientId && this.currentScenarioPatientId !== pacienteId;
+  }
 
-    const pasosOrdenados = [...flujo.pasos].sort((a, b) => a.orden - b.orden);
-    const pasoActualId = asignacion.pasoActualId
-      || pasosOrdenados.find(p => !asignacion.ejecucion.some(e => e.pasoId === p.id && e.fin))?.id
-      || pasosOrdenados[0]?.id;
+  getPatientLockTooltip(pacienteId: string): string | null {
+    return this.isPatientLocked(pacienteId) ? this.buildLockMessage() : null;
+  }
 
-    const paso = pasosOrdenados.find(p => p.id === pasoActualId);
-    return paso ? paso.titulo : 'Pendiente de inicio';
+  private buildLockMessage(): string {
+    if (this.currentScenarioPatientName) {
+      return `Completa el flujo en curso de ${this.currentScenarioPatientName} antes de cambiar de paciente.`;
+    }
+    return 'Completa el flujo en curso antes de cambiar de paciente.';
   }
 
   private isFormValid(): boolean {
