@@ -2,5 +2,6 @@
     "chat.tools.terminal.autoApprove": {
         "cp": true,
         "git add": true
-    }
+    },
+    "angular.enable-strict-mode-prompt": false
 }

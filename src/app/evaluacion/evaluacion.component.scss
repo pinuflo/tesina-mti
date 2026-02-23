@@ -75,6 +75,25 @@
 			border-color: #94a3b8;
 			box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 		}
+
+		.macro-slider {
+			margin-top: 0.65rem;
+			padding-top: 0.65rem;
+			border-top: 1px solid #e2e8f0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.35rem;
+
+			.macro-grams {
+				min-width: 3rem;
+				text-align: right;
+				font-weight: 600;
+			}
+
+			.macro-grams-input {
+				width: 70px;
+			}
+		}
 	}
 
 	.meal-grid {
@@ -117,6 +136,30 @@
 			text-align: center;
 			margin: 1.5rem 0;
 		}
+	}
+
+	.meal-portion-card {
+		border: 1px solid #e2e8f0;
+		border-radius: 10px;
+		padding: 0.65rem 0.75rem;
+		margin-bottom: 0.5rem;
+		background: #fff;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.meal-portion-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.meal-portion-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
 
 	.macro-portion-chip {
@@ -209,5 +252,66 @@
 		margin: 0;
 		font-size: 0.85rem;
 		color: #475569;
+	}
+}
+
+.meal-suggestions-panel {
+	border: 2px solid #d1fae5;
+	border-radius: 12px;
+	padding: 1rem;
+	background: #f0fdf4;
+
+	.suggestion-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1rem;
+	}
+
+	.suggestion-meal-card {
+		border: 1px solid #e2e8f0;
+		border-radius: 10px;
+		padding: 0.85rem;
+		background: #fff;
+	}
+
+	.suggestion-meal-header {
+		padding-bottom: 0.65rem;
+		border-bottom: 1px solid #e2e8f0;
+		margin-bottom: 0.75rem;
+	}
+
+	.suggested-dishes {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+	}
+
+	.dish-item {
+		padding: 0.65rem;
+		border: 1px solid #f1f5f9;
+		border-radius: 8px;
+		background: #f8fafc;
+		transition: all 0.2s ease;
+
+		&:hover {
+			border-color: #cbd5e1;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		}
+	}
+
+	.dish-info strong {
+		color: #1e293b;
+		font-size: 0.95rem;
+	}
+
+	.suggestion-totals {
+		padding-top: 0.65rem;
+		border-top: 1px solid #e2e8f0;
+		margin-top: 0.65rem;
+	}
+
+	.no-suggestions {
+		font-style: italic;
+		font-size: 0.85rem;
 	}
 }

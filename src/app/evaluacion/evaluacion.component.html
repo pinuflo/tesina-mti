@@ -127,7 +127,7 @@
                        name="masaMagra"
                        placeholder="Ej: 50"
                        step="0.1">
-                <small class="text-muted">La IA puede estimarla si no se ingresa, pero el modo manual debe registrarla para cálculos precisos.</small>
+                <small class="text-muted">Se estimará si no se ingresa</small>
               </div>
 
               <div class="col-12" *ngIf="isAIEnabled && estimacionMasaMagra">
@@ -390,6 +390,10 @@
             <i class="fas fa-robot me-1"></i>
             Sugerir pauta
           </button>
+          <button class="btn btn-success btn-sm" (click)="sugerirMenuReal()" [disabled]="!planTienePorciones()">
+            <i class="fas fa-utensils me-1"></i>
+            Sugerir menú real
+          </button>
         </div>
       </div>
       <div class="card-body">
@@ -412,10 +416,35 @@
                 </span>
               </div>
               <p class="macro-line small text-muted mb-0">
-                {{ portion.proteinas }}g proteína · {{ portion.carbohidratos }}g carbohidratos · {{ portion.grasas }}g grasa · {{ portion.calorias }} kcal
+                {{ getDominantGramsDisplay(portion) }}g {{ getMacroLabel(portion.macroDominante) }} · {{ portion.calorias }} kcal
               </p>
+              <div class="macro-slider">
+                <label class="small text-muted">Fijar gramos de {{ getMacroLabel(portion.macroDominante) }}</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input
+                    type="range"
+                    class="form-range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    [(ngModel)]="portionGrams[portion.id]"
+                    (ngModelChange)="onPortionGramsChange(portion, $event)"
+                  />
+                  <span class="macro-grams">{{ portionGrams[portion.id] }}g</span>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm macro-grams-input"
+                    min="0"
+                    max="100"
+                    step="1"
+                    [(ngModel)]="portionGrams[portion.id]"
+                    (ngModelChange)="onPortionGramsChange(portion, $event)"
+                  />
+                </div>
+                <small class="text-muted">Equivale a {{ portion.calorias }} kcal</small>
+              </div>
             </div>
-            <p class="text-muted fst-italic small mt-3">Tip: Usa los botones ± dentro de cada comida para ajustar la cantidad de porciones por macro sin definir platos.</p>
+            <p class="text-muted fst-italic small mt-3">Tip: Arrastra porciones o usa "Duplicar" dentro de cada comida para sumar mas porciones del mismo macro.</p>
           </div>
           <div class="col-lg-8 mt-4 mt-lg-0">
             <div class="meal-grid">
@@ -427,31 +456,60 @@
                 <div class="meal-dropzone"
                      (dragover)="allowDrop($event)"
                      (drop)="onDropPortion($event, meal.id)">
-                  <ng-container *ngIf="getMealMacroSummary(meal.id) as macroSummary">
-                    <p class="placeholder" *ngIf="!macroSummary.length">
-                      Arrastra porciones aquí
-                    </p>
-                    <div class="macro-portion-chip" *ngFor="let summary of macroSummary">
-                      <div>
-                        <strong>{{ summary.count }} porción{{ summary.count > 1 ? 'es' : '' }} de {{ getMacroLabel(summary.macro) }}</strong>
-                        <p class="small mb-0 text-muted">
-                          equivale a {{ summary.proteinas }}P · {{ summary.carbohidratos }}C · {{ summary.grasas }}G · {{ summary.calorias }} kcal
-                        </p>
-                      </div>
-                      <div class="macro-chip-actions">
-                        <button class="btn btn-sm btn-outline-secondary" (click)="decrementMacro(meal.id, summary.macro)" [disabled]="summary.count === 0" aria-label="Restar porción de macro">
-                          –
-                        </button>
-                        <span class="units">x{{ summary.count }}</span>
-                        <button class="btn btn-sm btn-outline-secondary" (click)="incrementMacro(meal.id, summary.macro)" aria-label="Sumar porción de macro">
-                          +
-                        </button>
-                        <button class="btn btn-sm btn-link text-danger" (click)="clearMacro(meal.id, summary.macro)" aria-label="Limpiar porción de macro">
-                          <i class="fas fa-times"></i>
-                        </button>
-                      </div>
+                  <p class="placeholder" *ngIf="meal.portions.length === 0">
+                    Arrastra porciones aqui
+                  </p>
+                  <div class="meal-portion-card" *ngFor="let portion of meal.portions">
+                    <div class="meal-portion-header">
+                      <strong>{{ portion.label }}</strong>
+                      <span class="badge" [ngClass]="{
+                        'bg-success-subtle border border-success text-success': portion.macroDominante === 'proteina',
+                        'bg-warning-subtle border border-warning text-warning': portion.macroDominante === 'carbohidrato',
+                        'bg-info-subtle border border-info text-info': portion.macroDominante === 'grasa'
+                      }">
+                        {{ portion.macroDominante | titlecase }}
+                      </span>
                     </div>
-                  </ng-container>
+                    <p class="small mb-1 text-muted">
+                      {{ getDominantGramsDisplay(portion) }}g {{ getMacroLabel(portion.macroDominante) }} · {{ portion.calorias }} kcal
+                    </p>
+                    <div class="macro-slider">
+                      <label class="small text-muted">Editar gramos de {{ getMacroLabel(portion.macroDominante) }}</label>
+                      <div class="d-flex align-items-center gap-2">
+                        <input
+                          type="range"
+                          class="form-range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          [ngModel]="getDominantGramsDisplay(portion)"
+                          (ngModelChange)="onAssignedPortionGramsChange(portion, $event)"
+                        />
+                        <span class="macro-grams">
+                        {{ getDominantGramsDisplay(portion) }}g
+                        </span>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm macro-grams-input"
+                          min="0"
+                          max="100"
+                          step="1"
+                          [ngModel]="getDominantGramsDisplay(portion)"
+                          (ngModelChange)="onAssignedPortionGramsChange(portion, $event)"
+                        />
+                      </div>
+                      <small class="text-muted">Equivale a {{ portion.calorias }} kcal</small>
+                    </div>
+                    <div class="meal-portion-actions">
+                      <button class="btn btn-sm btn-outline-secondary" (click)="duplicatePortion(meal.id, portion)" aria-label="Duplicar porcion">
+                        <i class="fas fa-clone me-1"></i>
+                        Duplicar
+                      </button>
+                      <button class="btn btn-sm btn-link text-danger" (click)="removePortion(meal.id, portion.instanceId)" aria-label="Eliminar porcion">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -485,6 +543,70 @@
               <div class="alert mt-3" [class.alert-success]="planCumpleMacros()" [class.alert-warning]="!planCumpleMacros()">
                 <i class="fas" [class.fa-check-circle]="planCumpleMacros()" [class.fa-exclamation-circle]="!planCumpleMacros()"></i>
                 <span class="ms-2">{{ planCumpleMacros() ? 'Las porciones cumplen los macros diarios ±8%' : 'Ajusta las porciones para acercarte a los macros diarios' }}</span>
+              </div>
+            </div>
+
+            <!-- Panel de sugerencias de menú real -->
+            <div class="meal-suggestions-panel mt-4" *ngIf="showMealSuggestions && mealSuggestions.length > 0">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                  <i class="fas fa-utensils text-success me-2"></i>
+                  Sugerencias de menú real
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" (click)="closeMealSuggestions()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <div class="alert alert-info small">
+                <i class="fas fa-info-circle me-2"></i>
+                Basado en tu plan de porciones, sugerimos estos platos reales que mejor se ajustan a tus macros objetivo.
+              </div>
+
+              <div class="suggestion-grid">
+                <div class="suggestion-meal-card" *ngFor="let suggestion of mealSuggestions">
+                  <div class="suggestion-meal-header">
+                    <h6 class="mb-1">{{ suggestion.mealTimeName }}</h6>
+                    <small class="text-muted">
+                      Objetivo: {{ suggestion.targetCalorias }} kcal
+                    </small>
+                  </div>
+
+                  <div class="suggested-dishes" *ngIf="suggestion.suggestedMeals.length > 0">
+                    <div class="dish-item" *ngFor="let meal of suggestion.suggestedMeals">
+                      <div class="dish-info">
+                        <strong>{{ meal.nombre }}</strong>
+                        <small class="text-muted d-block">
+                          {{ meal.calorias }} kcal • 
+                          P: {{ meal.proteinas }}g • 
+                          C: {{ meal.carbohidratos }}g • 
+                          G: {{ meal.grasas }}g
+                        </small>
+                        <span class="badge badge-sm mt-1" [ngClass]="{
+                          'bg-success-subtle text-success': meal.macroDominante === 'proteina',
+                          'bg-warning-subtle text-warning': meal.macroDominante === 'carbohidrato',
+                          'bg-info-subtle text-info': meal.macroDominante === 'grasa'
+                        }">
+                          {{ meal.porcionGramos }}g • {{ meal.origen }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="no-suggestions text-muted text-center py-3" *ngIf="suggestion.suggestedMeals.length === 0">
+                    <small>No se encontraron platos que coincidan con este tiempo de comida</small>
+                  </div>
+
+                  <div class="suggestion-totals mt-2">
+                    <small class="text-muted">
+                      <strong>Totales sugeridos:</strong> 
+                      {{ suggestion.totalCalorias }} kcal • 
+                      P: {{ suggestion.totalProteinas | number:'1.0-1' }}g • 
+                      C: {{ suggestion.totalCarbohidratos | number:'1.0-1' }}g • 
+                      G: {{ suggestion.totalGrasas | number:'1.0-1' }}g
+                    </small>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

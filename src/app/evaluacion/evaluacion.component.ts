@@ -12,10 +12,13 @@ import {
   DailyMealPlan,
   MealPortion,
   MealPortionAssignment,
-  ScenarioPatientPreset
+  ScenarioPatientPreset,
+  MealSuggestion,
+  RealMeal
 } from '../models/nutricion.models';
 import { ScenarioService } from '../services/scenario.service';
 import { WorkflowService } from '../services/workflow.service';
+import { MealCatalogService } from '../services/meal-catalog.service';
 
 @Component({
   selector: 'app-evaluacion',
@@ -77,7 +80,7 @@ export class EvaluacionComponent implements OnInit {
     },
     {
       id: 'macro-grasa',
-      label: 'Porción de grasa saludable',
+      label: 'Porción de grasa',
       descripcion: '15g grasas mono/poli',
       macroDominante: 'grasa',
       calorias: 135,
@@ -86,6 +89,8 @@ export class EvaluacionComponent implements OnInit {
       grasas: 15
     }
   ];
+
+  portionGrams: Record<string, number> = {};
 
   private macroOrder: MealPortion['macroDominante'][] = ['proteina', 'carbohidrato', 'grasa'];
   private macroPortionMap: Record<MealPortion['macroDominante'], string> = {
@@ -97,6 +102,9 @@ export class EvaluacionComponent implements OnInit {
 
   dailyMealPlan: DailyMealPlan = this.buildEmptyDailyPlan();
   private macroTolerance = 0.08;
+
+  mealSuggestions: MealSuggestion[] = [];
+  showMealSuggestions = false;
 
   flujoAsignado: FlujoAsignado | null = null;
   flujoDetalle: FlujoTrabajo | null = null;
@@ -119,7 +127,8 @@ export class EvaluacionComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private scenarioService: ScenarioService,
-    private workflowService: WorkflowService
+    private workflowService: WorkflowService,
+    private mealCatalogService: MealCatalogService
   ) {}
 
   ngOnInit(): void {
@@ -140,6 +149,8 @@ export class EvaluacionComponent implements OnInit {
         }
       }
     });
+
+    this.initPortionGrams();
   }
 
   seleccionarPaciente(paciente: Paciente | null) {
@@ -419,6 +430,33 @@ export class EvaluacionComponent implements OnInit {
     meal.portions = meal.portions.filter(p => p.macroDominante !== macro);
   }
 
+  duplicatePortion(mealId: string, portion: MealPortionAssignment) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return;
+    }
+    meal.portions = [...meal.portions, this.clonePortion(portion)];
+  }
+
+  removePortion(mealId: string, instanceId: string) {
+    const meal = this.dailyMealPlan.meals.find(m => m.id === mealId);
+    if (!meal) {
+      return;
+    }
+    meal.portions = meal.portions.filter(p => p.instanceId !== instanceId);
+  }
+
+  onPortionGramsChange(portion: MealPortion, gramsValue: number) {
+    const grams = this.clampGrams(Number(gramsValue));
+    this.portionGrams[portion.id] = grams;
+    this.applyDominantGrams(portion, grams);
+  }
+
+  onAssignedPortionGramsChange(portion: MealPortionAssignment, gramsValue: number) {
+    const grams = this.clampGrams(Number(gramsValue));
+    this.applyDominantGrams(portion, grams);
+  }
+
   getMacroLabel(macro: MealPortion['macroDominante']): string {
     switch (macro) {
       case 'proteina':
@@ -430,6 +468,10 @@ export class EvaluacionComponent implements OnInit {
       default:
         return 'mixtas';
     }
+  }
+
+  getDominantGramsDisplay(portion: MealPortion): number {
+    return this.getDominantGramsValue(portion);
   }
 
   getDailyTotals() {
@@ -516,6 +558,24 @@ export class EvaluacionComponent implements OnInit {
     });
   }
 
+  sugerirMenuReal() {
+    if (!this.planTienePorciones()) {
+      alert('Primero arma el plan de macros arrastrando porciones o usando "Sugerir pauta"');
+      return;
+    }
+
+    this.mealSuggestions = this.mealCatalogService.suggestFullMenu(this.dailyMealPlan.meals);
+    this.showMealSuggestions = true;
+  }
+
+  toggleMealSuggestions() {
+    this.showMealSuggestions = !this.showMealSuggestions;
+  }
+
+  closeMealSuggestions() {
+    this.showMealSuggestions = false;
+  }
+
   private buildEmptyDailyPlan(): DailyMealPlan {
     return {
       day: 'Semana tipo',
@@ -551,6 +611,47 @@ export class EvaluacionComponent implements OnInit {
       instanceId: randomId,
       units: 1
     };
+  }
+
+  private initPortionGrams() {
+    this.portionGrams = {};
+    this.availablePortions.forEach(portion => {
+      this.portionGrams[portion.id] = this.getDominantGramsValue(portion);
+      this.applyDominantGrams(portion, this.portionGrams[portion.id]);
+    });
+  }
+
+  private getDominantGramsValue(portion: MealPortion): number {
+    switch (portion.macroDominante) {
+      case 'proteina':
+        return portion.proteinas;
+      case 'carbohidrato':
+        return portion.carbohidratos;
+      case 'grasa':
+        return portion.grasas;
+      default:
+        return 0;
+    }
+  }
+
+  private applyDominantGrams(portion: MealPortion, grams: number) {
+    const safeGrams = this.clampGrams(grams);
+    portion.proteinas = portion.macroDominante === 'proteina' ? safeGrams : 0;
+    portion.carbohidratos = portion.macroDominante === 'carbohidrato' ? safeGrams : 0;
+    portion.grasas = portion.macroDominante === 'grasa' ? safeGrams : 0;
+    portion.calorias = this.calculateCalories(portion);
+  }
+
+  private calculateCalories(portion: MealPortion): number {
+    const calories = portion.proteinas * 4 + portion.carbohidratos * 4 + portion.grasas * 9;
+    return Math.round(calories);
+  }
+
+  private clampGrams(value: number): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round(value)));
   }
 
   private buildMenuFromPlan(): string[] {

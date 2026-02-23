@@ -1,0 +1,1131 @@
+[
+  {
+    "id": "hc-d-001",
+    "nombre": "Huevos revueltos con tostadas",
+    "macroDominante": "proteina",
+    "calorias": 220,
+    "proteinas": 15,
+    "carbohidratos": 20,
+    "grasas": 8,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Huevo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-002",
+    "nombre": "Avena con leche y banana",
+    "macroDominante": "carbohidrato",
+    "calorias": 280,
+    "proteinas": 12,
+    "carbohidratos": 48,
+    "grasas": 4,
+    "porcionGramos": 250,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Cereal",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-003",
+    "nombre": "Yogur natural con granola",
+    "macroDominante": "proteina",
+    "calorias": 200,
+    "proteinas": 10,
+    "carbohidratos": 28,
+    "grasas": 5,
+    "porcionGramos": 200,
+    "tiemposAptos": [
+      "desayuno",
+      "colacion"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-004",
+    "nombre": "Tostadas con queso untable light y mermelada",
+    "macroDominante": "carbohidrato",
+    "calorias": 210,
+    "proteinas": 8,
+    "carbohidratos": 35,
+    "grasas": 4,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Panificado",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-005",
+    "nombre": "Omelette de claras con vegetales",
+    "macroDominante": "proteina",
+    "calorias": 140,
+    "proteinas": 20,
+    "carbohidratos": 5,
+    "grasas": 4,
+    "porcionGramos": 180,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Huevo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-006",
+    "nombre": "Licuado de frutas con leche descremada",
+    "macroDominante": "carbohidrato",
+    "calorias": 180,
+    "proteinas": 8,
+    "carbohidratos": 35,
+    "grasas": 1,
+    "porcionGramos": 300,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana"
+    ],
+    "categoria": "Bebida",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-007",
+    "nombre": "Pan integral con palta",
+    "macroDominante": "grasa",
+    "calorias": 250,
+    "proteinas": 6,
+    "carbohidratos": 25,
+    "grasas": 14,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Panificado",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-008",
+    "nombre": "Pancakes integrales con miel",
+    "macroDominante": "carbohidrato",
+    "calorias": 320,
+    "proteinas": 10,
+    "carbohidratos": 55,
+    "grasas": 7,
+    "porcionGramos": 180,
+    "tiemposAptos": [
+      "desayuno"
+    ],
+    "categoria": "Panificado",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-009",
+    "nombre": "Medialunas integrales",
+    "macroDominante": "carbohidrato",
+    "calorias": 200,
+    "proteinas": 5,
+    "carbohidratos": 28,
+    "grasas": 8,
+    "porcionGramos": 70,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana"
+    ],
+    "categoria": "Panificado",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-d-010",
+    "nombre": "Mate cocido con leche descremada",
+    "macroDominante": "carbohidrato",
+    "calorias": 70,
+    "proteinas": 6,
+    "carbohidratos": 10,
+    "grasas": 0.5,
+    "porcionGramos": 250,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Bebida",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-001",
+    "nombre": "Pechuga de pollo grillada",
+    "macroDominante": "proteina",
+    "calorias": 165,
+    "proteinas": 31,
+    "carbohidratos": 0,
+    "grasas": 3.6,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-002",
+    "nombre": "Milanesa de carne magra al horno",
+    "macroDominante": "proteina",
+    "calorias": 250,
+    "proteinas": 28,
+    "carbohidratos": 15,
+    "grasas": 9,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-003",
+    "nombre": "Salmón al horno con limón",
+    "macroDominante": "proteina",
+    "calorias": 240,
+    "proteinas": 28,
+    "carbohidratos": 0,
+    "grasas": 14,
+    "porcionGramos": 140,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Pescado",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-004",
+    "nombre": "Merluza a la plancha",
+    "macroDominante": "proteina",
+    "calorias": 120,
+    "proteinas": 22,
+    "carbohidratos": 0,
+    "grasas": 3,
+    "porcionGramos": 140,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Pescado",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-005",
+    "nombre": "Atún al natural",
+    "macroDominante": "proteina",
+    "calorias": 116,
+    "proteinas": 26,
+    "carbohidratos": 0,
+    "grasas": 0.8,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena",
+      "colacion"
+    ],
+    "categoria": "Pescado",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-006",
+    "nombre": "Bife de lomo magro a la plancha",
+    "macroDominante": "proteina",
+    "calorias": 200,
+    "proteinas": 26,
+    "carbohidratos": 0,
+    "grasas": 10,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-007",
+    "nombre": "Pechuga de pavo al horno",
+    "macroDominante": "proteina",
+    "calorias": 135,
+    "proteinas": 30,
+    "carbohidratos": 0,
+    "grasas": 1.5,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-008",
+    "nombre": "Hamburguesa casera de carne magra",
+    "macroDominante": "proteina",
+    "calorias": 220,
+    "proteinas": 24,
+    "carbohidratos": 2,
+    "grasas": 13,
+    "porcionGramos": 130,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-009",
+    "nombre": "Peceto al horno",
+    "macroDominante": "proteina",
+    "calorias": 180,
+    "proteinas": 28,
+    "carbohidratos": 0,
+    "grasas": 7,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Carne",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-010",
+    "nombre": "Lentejas cocidas",
+    "macroDominante": "proteina",
+    "calorias": 116,
+    "proteinas": 9,
+    "carbohidratos": 20,
+    "grasas": 0.4,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Legumbre",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-011",
+    "nombre": "Arroz integral cocido",
+    "macroDominante": "carbohidrato",
+    "calorias": 112,
+    "proteinas": 2.6,
+    "carbohidratos": 24,
+    "grasas": 0.9,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Cereal",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-012",
+    "nombre": "Arroz blanco cocido",
+    "macroDominante": "carbohidrato",
+    "calorias": 130,
+    "proteinas": 2.7,
+    "carbohidratos": 28,
+    "grasas": 0.3,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Cereal",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-013",
+    "nombre": "Quinoa cocida",
+    "macroDominante": "carbohidrato",
+    "calorias": 120,
+    "proteinas": 4.4,
+    "carbohidratos": 21,
+    "grasas": 1.9,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Cereal",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-014",
+    "nombre": "Pasta integral cocida",
+    "macroDominante": "carbohidrato",
+    "calorias": 124,
+    "proteinas": 5,
+    "carbohidratos": 26,
+    "grasas": 0.5,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Pasta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-015",
+    "nombre": "Batata al horno",
+    "macroDominante": "carbohidrato",
+    "calorias": 90,
+    "proteinas": 2,
+    "carbohidratos": 21,
+    "grasas": 0.2,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-016",
+    "nombre": "Papa hervida",
+    "macroDominante": "carbohidrato",
+    "calorias": 86,
+    "proteinas": 1.9,
+    "carbohidratos": 20,
+    "grasas": 0.1,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-017",
+    "nombre": "Polenta cocida",
+    "macroDominante": "carbohidrato",
+    "calorias": 70,
+    "proteinas": 1.5,
+    "carbohidratos": 15,
+    "grasas": 0.3,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Cereal",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-018",
+    "nombre": "Puré de calabaza",
+    "macroDominante": "carbohidrato",
+    "calorias": 45,
+    "proteinas": 1.5,
+    "carbohidratos": 10,
+    "grasas": 0.2,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-019",
+    "nombre": "Choclo cocido",
+    "macroDominante": "carbohidrato",
+    "calorias": 96,
+    "proteinas": 3.4,
+    "carbohidratos": 21,
+    "grasas": 1.5,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena",
+      "colacion"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-a-020",
+    "nombre": "Garbanzos cocidos",
+    "macroDominante": "carbohidrato",
+    "calorias": 164,
+    "proteinas": 8.9,
+    "carbohidratos": 27.4,
+    "grasas": 2.6,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Legumbre",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-001",
+    "nombre": "Ensalada verde mixta",
+    "macroDominante": "carbohidrato",
+    "calorias": 25,
+    "proteinas": 2,
+    "carbohidratos": 5,
+    "grasas": 0.3,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Ensalada",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-002",
+    "nombre": "Ensalada de tomate y lechuga",
+    "macroDominante": "carbohidrato",
+    "calorias": 30,
+    "proteinas": 1.5,
+    "carbohidratos": 6,
+    "grasas": 0.5,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Ensalada",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-003",
+    "nombre": "Brócoli al vapor",
+    "macroDominante": "carbohidrato",
+    "calorias": 35,
+    "proteinas": 2.8,
+    "carbohidratos": 7,
+    "grasas": 0.4,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-004",
+    "nombre": "Espinaca cocida",
+    "macroDominante": "carbohidrato",
+    "calorias": 23,
+    "proteinas": 2.9,
+    "carbohidratos": 3.6,
+    "grasas": 0.3,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-005",
+    "nombre": "Zanahoria rallada",
+    "macroDominante": "carbohidrato",
+    "calorias": 41,
+    "proteinas": 0.9,
+    "carbohidratos": 10,
+    "grasas": 0.2,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena",
+      "colacion"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-006",
+    "nombre": "Acelga salteada",
+    "macroDominante": "carbohidrato",
+    "calorias": 25,
+    "proteinas": 2.3,
+    "carbohidratos": 4.5,
+    "grasas": 0.3,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-007",
+    "nombre": "Zapallito al horno",
+    "macroDominante": "carbohidrato",
+    "calorias": 20,
+    "proteinas": 1.5,
+    "carbohidratos": 4,
+    "grasas": 0.2,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-v-008",
+    "nombre": "Berenjena grillada",
+    "macroDominante": "carbohidrato",
+    "calorias": 35,
+    "proteinas": 1,
+    "carbohidratos": 8.6,
+    "grasas": 0.2,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Verdura",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-001",
+    "nombre": "Banana mediana",
+    "macroDominante": "carbohidrato",
+    "calorias": 105,
+    "proteinas": 1.3,
+    "carbohidratos": 27,
+    "grasas": 0.4,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-002",
+    "nombre": "Manzana mediana",
+    "macroDominante": "carbohidrato",
+    "calorias": 95,
+    "proteinas": 0.5,
+    "carbohidratos": 25,
+    "grasas": 0.3,
+    "porcionGramos": 180,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-003",
+    "nombre": "Naranja mediana",
+    "macroDominante": "carbohidrato",
+    "calorias": 62,
+    "proteinas": 1.2,
+    "carbohidratos": 15,
+    "grasas": 0.2,
+    "porcionGramos": 130,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-004",
+    "nombre": "Almendras crudas (20 unidades)",
+    "macroDominante": "grasa",
+    "calorias": 170,
+    "proteinas": 6,
+    "carbohidratos": 6,
+    "grasas": 15,
+    "porcionGramos": 28,
+    "tiemposAptos": [
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruto seco",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-005",
+    "nombre": "Nueces (8 mitades)",
+    "macroDominante": "grasa",
+    "calorias": 185,
+    "proteinas": 4.3,
+    "carbohidratos": 3.9,
+    "grasas": 18.5,
+    "porcionGramos": 28,
+    "tiemposAptos": [
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruto seco",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-006",
+    "nombre": "Yogur descremado natural",
+    "macroDominante": "proteina",
+    "calorias": 60,
+    "proteinas": 6,
+    "carbohidratos": 8,
+    "grasas": 0.5,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-007",
+    "nombre": "Queso blanco descremado",
+    "macroDominante": "proteina",
+    "calorias": 72,
+    "proteinas": 11,
+    "carbohidratos": 3.5,
+    "grasas": 1.5,
+    "porcionGramos": 60,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-008",
+    "nombre": "Barrita de cereal",
+    "macroDominante": "carbohidrato",
+    "calorias": 100,
+    "proteinas": 2,
+    "carbohidratos": 20,
+    "grasas": 2,
+    "porcionGramos": 25,
+    "tiemposAptos": [
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Snack",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-009",
+    "nombre": "Mandarina mediana",
+    "macroDominante": "carbohidrato",
+    "calorias": 47,
+    "proteinas": 0.8,
+    "carbohidratos": 12,
+    "grasas": 0.3,
+    "porcionGramos": 88,
+    "tiemposAptos": [
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-c-010",
+    "nombre": "Frutillas frescas",
+    "macroDominante": "carbohidrato",
+    "calorias": 32,
+    "proteinas": 0.7,
+    "carbohidratos": 7.7,
+    "grasas": 0.3,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-g-001",
+    "nombre": "Aceite de oliva (1 cucharada)",
+    "macroDominante": "grasa",
+    "calorias": 120,
+    "proteinas": 0,
+    "carbohidratos": 0,
+    "grasas": 13.5,
+    "porcionGramos": 15,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Aceite",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-g-002",
+    "nombre": "Palta (medio aguacate)",
+    "macroDominante": "grasa",
+    "calorias": 160,
+    "proteinas": 2,
+    "carbohidratos": 8.5,
+    "grasas": 15,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "desayuno",
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Fruta",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-g-003",
+    "nombre": "Semillas de chía (1 cucharada)",
+    "macroDominante": "grasa",
+    "calorias": 58,
+    "proteinas": 2,
+    "carbohidratos": 5,
+    "grasas": 3.7,
+    "porcionGramos": 12,
+    "tiemposAptos": [
+      "desayuno",
+      "colacion"
+    ],
+    "categoria": "Semilla",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-g-004",
+    "nombre": "Mantequilla de maní (1 cucharada)",
+    "macroDominante": "grasa",
+    "calorias": 95,
+    "proteinas": 4,
+    "carbohidratos": 3.5,
+    "grasas": 8,
+    "porcionGramos": 16,
+    "tiemposAptos": [
+      "desayuno",
+      "colacion"
+    ],
+    "categoria": "Untable",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-g-005",
+    "nombre": "Aceitunas verdes (10 unidades)",
+    "macroDominante": "grasa",
+    "calorias": 50,
+    "proteinas": 0.5,
+    "carbohidratos": 2.8,
+    "grasas": 4.5,
+    "porcionGramos": 40,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena",
+      "colacion"
+    ],
+    "categoria": "Encurtido",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pc-001",
+    "nombre": "Empanada de carne al horno",
+    "macroDominante": "carbohidrato",
+    "calorias": 250,
+    "proteinas": 10,
+    "carbohidratos": 28,
+    "grasas": 11,
+    "porcionGramos": 120,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Plato completo",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pc-002",
+    "nombre": "Tarta de verduras light",
+    "macroDominante": "carbohidrato",
+    "calorias": 180,
+    "proteinas": 8,
+    "carbohidratos": 20,
+    "grasas": 7,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Plato completo",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pc-003",
+    "nombre": "Guiso de lentejas",
+    "macroDominante": "proteina",
+    "calorias": 220,
+    "proteinas": 14,
+    "carbohidratos": 32,
+    "grasas": 4,
+    "porcionGramos": 300,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Plato completo",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pc-004",
+    "nombre": "Pollo al horno con vegetales",
+    "macroDominante": "proteina",
+    "calorias": 280,
+    "proteinas": 35,
+    "carbohidratos": 15,
+    "grasas": 10,
+    "porcionGramos": 250,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Plato completo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pc-005",
+    "nombre": "Wok de vegetales con pollo",
+    "macroDominante": "proteina",
+    "calorias": 260,
+    "proteinas": 28,
+    "carbohidratos": 20,
+    "grasas": 8,
+    "porcionGramos": 300,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Plato completo",
+    "origen": "Oriental",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-l-001",
+    "nombre": "Leche descremada (1 taza)",
+    "macroDominante": "proteina",
+    "calorias": 83,
+    "proteinas": 8,
+    "carbohidratos": 12,
+    "grasas": 0.2,
+    "porcionGramos": 240,
+    "tiemposAptos": [
+      "desayuno",
+      "media_manana",
+      "colacion"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-l-002",
+    "nombre": "Ricota descremada",
+    "macroDominante": "proteina",
+    "calorias": 138,
+    "proteinas": 11,
+    "carbohidratos": 5,
+    "grasas": 8,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "desayuno",
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-l-003",
+    "nombre": "Queso port salut light",
+    "macroDominante": "proteina",
+    "calorias": 110,
+    "proteinas": 12,
+    "carbohidratos": 2,
+    "grasas": 6,
+    "porcionGramos": 40,
+    "tiemposAptos": [
+      "desayuno",
+      "colacion"
+    ],
+    "categoria": "Lácteo",
+    "origen": "Argentina",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-l-004",
+    "nombre": "Tofu firme",
+    "macroDominante": "proteina",
+    "calorias": 76,
+    "proteinas": 8,
+    "carbohidratos": 1.9,
+    "grasas": 4.8,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Proteína vegetal",
+    "origen": "Oriental",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-s-001",
+    "nombre": "Sopa de verduras casera",
+    "macroDominante": "carbohidrato",
+    "calorias": 60,
+    "proteinas": 2,
+    "carbohidratos": 12,
+    "grasas": 0.5,
+    "porcionGramos": 250,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Sopa",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-s-002",
+    "nombre": "Caldo de pollo casero",
+    "macroDominante": "proteina",
+    "calorias": 40,
+    "proteinas": 5,
+    "carbohidratos": 3,
+    "grasas": 1,
+    "porcionGramos": 250,
+    "tiemposAptos": [
+      "almuerzo",
+      "cena"
+    ],
+    "categoria": "Sopa",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pos-001",
+    "nombre": "Gelatina light",
+    "macroDominante": "carbohidrato",
+    "calorias": 10,
+    "proteinas": 1,
+    "carbohidratos": 2,
+    "grasas": 0,
+    "porcionGramos": 100,
+    "tiemposAptos": [
+      "colacion"
+    ],
+    "categoria": "Postre",
+    "origen": "Internacional",
+    "fuente": "manual"
+  },
+  {
+    "id": "hc-pos-002",
+    "nombre": "Macedonia de frutas",
+    "macroDominante": "carbohidrato",
+    "calorias": 70,
+    "proteinas": 1,
+    "carbohidratos": 17,
+    "grasas": 0.3,
+    "porcionGramos": 150,
+    "tiemposAptos": [
+      "desayuno",
+      "colacion"
+    ],
+    "categoria": "Postre",
+    "origen": "Internacional",
+    "fuente": "manual"
+  }
+]

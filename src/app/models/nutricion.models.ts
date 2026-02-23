@@ -187,6 +187,37 @@ export interface DailyMealPlan {
   meals: MealTimePlan[];
 }
 
+export interface RealMeal {
+  id: string;
+  nombre: string;
+  nombreEn?: string;
+  descripcion?: string;
+  macroDominante: 'proteina' | 'carbohidrato' | 'grasa' | 'mixto';
+  calorias: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
+  porcionGramos: number;
+  tiemposAptos: ('desayuno' | 'media_manana' | 'almuerzo' | 'colacion' | 'cena')[];
+  categoria?: string;
+  origen?: string;
+  fuente?: 'usda' | 'openfoodfacts' | 'themealdb' | 'manual';
+}
+
+export interface MealSuggestion {
+  mealTimeId: string;
+  mealTimeName: string;
+  suggestedMeals: RealMeal[];
+  totalCalorias: number;
+  totalProteinas: number;
+  totalCarbohidratos: number;
+  totalGrasas: number;
+  targetCalorias: number;
+  targetProteinas: number;
+  targetCarbohidratos: number;
+  targetGrasas: number;
+}
+
 export interface ScenarioPatientPreset {
   edad: number;
   peso: number;
