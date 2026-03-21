@@ -337,7 +337,7 @@ export class WorkflowService {
 
     return {
       tiempoTotalMin,
-      facilidadPromedio
+      facilidadPromedio,
       camposAutocompletadosTotal,
       camposManualesTotal,
       pasosCompletados,
