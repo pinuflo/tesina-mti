@@ -13,6 +13,6 @@ COPY . .
 RUN npm run build --prod
 
 FROM nginx:alpine
-COPY --from=build source/dist/taleweaver /usr/share/nginx/html
+COPY --from=build source/dist/sistema-nutricional /usr/share/nginx/html
 COPY --from=build source/nginx.conf /etc/nginx/conf.d/
 EXPOSE 8085
