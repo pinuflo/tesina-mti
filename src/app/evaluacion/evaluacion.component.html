@@ -86,6 +86,7 @@
                 <input type="number"
                        class="form-control"
                        [(ngModel)]="paciente.edad"
+                    (ngModelChange)="registrarEdicionCampo('edad')"
                        name="edad"
                        placeholder="30">
               </div>
@@ -95,6 +96,7 @@
                 <input type="number"
                        class="form-control"
                        [(ngModel)]="paciente.peso"
+                    (ngModelChange)="registrarEdicionCampo('peso')"
                        name="peso"
                        placeholder="70"
                        step="0.1">
@@ -105,6 +107,7 @@
                 <input type="number"
                        class="form-control"
                        [(ngModel)]="paciente.altura"
+                    (ngModelChange)="registrarEdicionCampo('altura')"
                        name="altura"
                        placeholder="170">
               </div>
@@ -114,6 +117,7 @@
                 <input type="number"
                        class="form-control"
                        [(ngModel)]="paciente.masaGrasa"
+                    (ngModelChange)="registrarEdicionCampo('masaGrasa')"
                        name="masaGrasa"
                        placeholder="Ej: 18"
                        step="0.1">
@@ -124,6 +128,7 @@
                 <input type="number"
                        class="form-control"
                        [(ngModel)]="paciente.masaMagra"
+                    (ngModelChange)="registrarEdicionCampo('masaMagra')"
                        name="masaMagra"
                        placeholder="Ej: 50"
                        step="0.1">
@@ -155,6 +160,7 @@
                 <label class="form-label">Nivel de actividad</label>
                 <select class="form-select"
                         [(ngModel)]="paciente.actividad"
+                  (ngModelChange)="registrarEdicionCampo('actividad')"
                         name="actividad">
                   <option value="sedentario">Sedentario</option>
                   <option value="ligero">Actividad ligera</option>
@@ -167,6 +173,7 @@
                 <label class="form-label">Objetivo</label>
                 <select class="form-select"
                         [(ngModel)]="paciente.objetivo"
+                  (ngModelChange)="registrarEdicionCampo('objetivo')"
                         name="objetivo">
                   <option value="perder">Perder peso</option>
                   <option value="mantener">Mantener peso</option>
@@ -239,6 +246,31 @@
                   {{ isAIEnabled ? 'Recomendaciones IA' : 'Recomendaciones Generales' }}
                 </h6>
                 <pre class="mb-0" style="font-family: inherit; white-space: pre-wrap;">{{ pautaNutricional.recomendaciones }}</pre>
+              </div>
+
+              <div class="alert alert-light border mt-3" *ngIf="pasoEnEjecucion">
+                <h6 class="mb-2">
+                  <i class="fas fa-gauge-high me-2"></i>
+                  Eficiencia del paso actual
+                </h6>
+                <div class="row g-2 small">
+                  <div class="col-6 col-md-3">
+                    <strong>{{ metricasPasoRuntime.interacciones }}</strong>
+                    <div class="text-muted">Interacciones</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <strong>{{ metricasPasoRuntime.iaSugerencias }}</strong>
+                    <div class="text-muted">Sugerencias IA</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <strong>{{ metricasPasoRuntime.iaAceptadas }}</strong>
+                    <div class="text-muted">Aceptadas</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <strong>{{ metricasPasoRuntime.iaCorregidas }}</strong>
+                    <div class="text-muted">Corregidas</div>
+                  </div>
+                </div>
               </div>
 
               <div *ngIf="isAIEnabled" class="mt-3">

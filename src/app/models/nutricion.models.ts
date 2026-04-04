@@ -118,6 +118,10 @@ export interface WorkflowLogEntry {
   camposAutocompletados?: number;
   camposManuales?: number;
   tiempoMinutos?: number;
+  interacciones?: number;
+  iaSugerencias?: number;
+  iaAceptadas?: number;
+  iaCorregidas?: number;
 }
 
 export interface PasoEjecucion {
@@ -130,6 +134,10 @@ export interface PasoEjecucion {
   comentarios?: string;
   camposAutocompletados?: number;
   camposManuales?: number;
+  interacciones?: number;
+  iaSugerencias?: number;
+  iaAceptadas?: number;
+  iaCorregidas?: number;
 }
 
 export interface FlujoResultado {
@@ -144,6 +152,10 @@ export interface FlujoResultado {
   pasosCompletados?: number;
   totalPasos?: number;
   menuRealSugerido?: boolean;
+  interaccionesTotal?: number;
+  iaSugerenciasTotal?: number;
+  iaAceptadasTotal?: number;
+  iaCorregidasTotal?: number;
 }
 
 export type OrdenValidacion = 'manual-primero' | 'ia-primero';

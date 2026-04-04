@@ -19,6 +19,10 @@ interface CompletePasoPayload {
   camposAutocompletados?: number;
   camposManuales?: number;
   tiempoMinutos?: number;
+  interacciones?: number;
+  iaSugerencias?: number;
+  iaAceptadas?: number;
+  iaCorregidas?: number;
 }
 
 interface AssignOptions {
@@ -270,12 +274,20 @@ export class WorkflowService {
       paso.comentarios = payload.comentarios;
       paso.camposAutocompletados = payload.camposAutocompletados;
       paso.camposManuales = payload.camposManuales;
+      paso.interacciones = payload.interacciones;
+      paso.iaSugerencias = payload.iaSugerencias;
+      paso.iaAceptadas = payload.iaAceptadas;
+      paso.iaCorregidas = payload.iaCorregidas;
       this.logService.completeStep(paso.logId, {
         facilidad: payload.facilidad,
         comentario: payload.comentarios,
         camposAutocompletados: payload.camposAutocompletados,
         camposManuales: payload.camposManuales,
-        tiempoMinutos: diffMin
+        tiempoMinutos: diffMin,
+        interacciones: payload.interacciones,
+        iaSugerencias: payload.iaSugerencias,
+        iaAceptadas: payload.iaAceptadas,
+        iaCorregidas: payload.iaCorregidas
       });
     }
 
@@ -341,6 +353,22 @@ export class WorkflowService {
     );
     const pasosCompletados = asignacion.ejecucion.filter(e => e.fin).length;
     const totalPasos = flujo?.pasos.length ?? asignacion.ejecucion.length;
+    const interaccionesTotal = asignacion.ejecucion.reduce(
+      (sum, paso) => sum + (paso.interacciones || 0),
+      0
+    );
+    const iaSugerenciasTotal = asignacion.ejecucion.reduce(
+      (sum, paso) => sum + (paso.iaSugerencias || 0),
+      0
+    );
+    const iaAceptadasTotal = asignacion.ejecucion.reduce(
+      (sum, paso) => sum + (paso.iaAceptadas || 0),
+      0
+    );
+    const iaCorregidasTotal = asignacion.ejecucion.reduce(
+      (sum, paso) => sum + (paso.iaCorregidas || 0),
+      0
+    );
     const menuRealSugerido = asignacion.ejecucion.some(e =>
       !!e.fin && (e.pasoId === 'evaluacion_3' || e.pasoId === 'evaluacion_ia_3')
     );
@@ -357,7 +385,11 @@ export class WorkflowService {
       camposManualesTotal,
       pasosCompletados,
       totalPasos,
-      menuRealSugerido
+      menuRealSugerido,
+      interaccionesTotal,
+      iaSugerenciasTotal,
+      iaAceptadasTotal,
+      iaCorregidasTotal
     };
   }
 

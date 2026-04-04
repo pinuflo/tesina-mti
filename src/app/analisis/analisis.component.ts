@@ -26,10 +26,12 @@ export class AnalisisComponent implements OnInit {
     promedioIMC: 0
   };
   metricasFlujo = {
-    sinIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0 },
-    conIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0 },
+    sinIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0, interaccionesPromedio: 0, manualesPromedio: 0 },
+    conIA: { total: 0, tiempoPromedio: 0, facilidadPromedio: 0, interaccionesPromedio: 0, manualesPromedio: 0 },
     deltaTiempo: 0,
-    deltaFacilidad: 0
+    deltaFacilidad: 0,
+    deltaInteracciones: 0,
+    deltaManuales: 0
   };
 
   constructor(
@@ -111,7 +113,13 @@ export class AnalisisComponent implements OnInit {
       const facilidadPromedio = total > 0
         ? subset.reduce((sum, f) => sum + (f.resultado?.facilidadPromedio || 0), 0) / total
         : 0;
-      return { total, tiempoPromedio, facilidadPromedio };
+      const interaccionesPromedio = total > 0
+        ? subset.reduce((sum, f) => sum + (f.resultado?.interaccionesTotal || 0), 0) / total
+        : 0;
+      const manualesPromedio = total > 0
+        ? subset.reduce((sum, f) => sum + (f.resultado?.camposManualesTotal || 0), 0) / total
+        : 0;
+      return { total, tiempoPromedio, facilidadPromedio, interaccionesPromedio, manualesPromedio };
     };
 
     const sinIA = construirMetricas('sin-ia');
@@ -122,12 +130,20 @@ export class AnalisisComponent implements OnInit {
     const deltaFacilidad = conIA.facilidadPromedio && sinIA.facilidadPromedio
       ? conIA.facilidadPromedio - sinIA.facilidadPromedio
       : 0;
+    const deltaInteracciones = sinIA.interaccionesPromedio && conIA.interaccionesPromedio
+      ? sinIA.interaccionesPromedio - conIA.interaccionesPromedio
+      : 0;
+    const deltaManuales = sinIA.manualesPromedio && conIA.manualesPromedio
+      ? sinIA.manualesPromedio - conIA.manualesPromedio
+      : 0;
 
     this.metricasFlujo = {
       sinIA,
       conIA,
       deltaTiempo,
-      deltaFacilidad
+      deltaFacilidad,
+      deltaInteracciones,
+      deltaManuales
     };
   }
 }

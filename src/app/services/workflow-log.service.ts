@@ -8,6 +8,10 @@ interface CompletePayload {
   camposAutocompletados?: number;
   camposManuales?: number;
   tiempoMinutos?: number;
+  interacciones?: number;
+  iaSugerencias?: number;
+  iaAceptadas?: number;
+  iaCorregidas?: number;
 }
 
 @Injectable({
@@ -67,6 +71,10 @@ export class WorkflowLogService {
         comentario: payload.comentario ?? log.comentario,
         camposAutocompletados: payload.camposAutocompletados ?? log.camposAutocompletados,
         camposManuales: payload.camposManuales ?? log.camposManuales,
+        interacciones: payload.interacciones ?? log.interacciones,
+        iaSugerencias: payload.iaSugerencias ?? log.iaSugerencias,
+        iaAceptadas: payload.iaAceptadas ?? log.iaAceptadas,
+        iaCorregidas: payload.iaCorregidas ?? log.iaCorregidas,
         acciones: log.acciones,
         tiempoMinutos: diffMin
       } as WorkflowLogEntry;

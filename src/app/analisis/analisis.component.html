@@ -265,6 +265,8 @@
                   <td>{{ metricasFlujo.conIA.total }}</td>
                   <td>{{ metricasFlujo.conIA.tiempoPromedio | number:'1.0-1' }}</td>
                   <td>{{ metricasFlujo.conIA.facilidadPromedio | number:'1.0-1' }}</td>
+                  <th>Interacciones medias</th>
+                  <th>Campos manuales medios</th>
                 </tr>
               </tbody>
             </table>
@@ -272,14 +274,17 @@
           <small class="text-muted">Datos basados en flujos completados y registrados mediante el panel guiado.</small>
         </div>
       </div>
-    </div>
     <div class="col-lg-6">
+                  <td>{{ metricasFlujo.sinIA.interaccionesPromedio | number:'1.0-1' }}</td>
+                  <td>{{ metricasFlujo.sinIA.manualesPromedio | number:'1.0-1' }}</td>
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">
             <i class="fas fa-balance-scale me-2"></i>
             Impacto de la IA frente al flujo manual
           </h5>
+                  <td>{{ metricasFlujo.conIA.interaccionesPromedio | number:'1.0-1' }}</td>
+                  <td>{{ metricasFlujo.conIA.manualesPromedio | number:'1.0-1' }}</td>
         </div>
         <div class="card-body">
           <p class="mb-2">
@@ -292,6 +297,18 @@
             <strong>Mejora en facilidad reportada:</strong>
             <span [class]="metricasFlujo.deltaFacilidad > 0 ? 'text-success' : 'text-muted'">
               +{{ metricasFlujo.deltaFacilidad | number:'1.0-1' }} pts
+            </span>
+          </p>
+          <p class="mb-2">
+            <strong>Reducción de interacciones:</strong>
+            <span [class]="metricasFlujo.deltaInteracciones > 0 ? 'text-success' : 'text-muted'">
+              {{ metricasFlujo.deltaInteracciones | number:'1.0-1' }} menos por flujo
+            </span>
+          </p>
+          <p class="mb-2">
+            <strong>Reducción de trabajo manual:</strong>
+            <span [class]="metricasFlujo.deltaManuales > 0 ? 'text-success' : 'text-muted'">
+              {{ metricasFlujo.deltaManuales | number:'1.0-1' }} campos menos por flujo
             </span>
           </p>
           <div class="alert alert-info" *ngIf="flujosAsignados.length === 0">

@@ -134,6 +134,17 @@ export class EvaluacionComponent implements OnInit {
     camposManuales: 6,
     comentarios: ''
   };
+  metricasPasoRuntime = {
+    interacciones: 0,
+    iaSugerencias: 0,
+    iaAceptadas: 0,
+    iaCorregidas: 0
+  };
+  private pasoMetricasActualId: string | null = null;
+  private camposEditadosPaso = new Set<string>();
+  private camposSugeridosIA = new Set<string>();
+  private camposAceptadosIA = new Set<string>();
+  private camposCorregidosIA = new Set<string>();
 
   estimacionMasaGrasa = 0;
   estimacionMasaMagra = 0;
@@ -213,6 +224,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   calcularMacrosDiarios() {
+    this.registrarInteraccion();
     if (!this.pacienteSeleccionado) {
       alert('Selecciona un paciente antes de calcular.');
       return;
@@ -273,6 +285,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   guardarPauta() {
+    this.registrarInteraccion();
     if (this.currentStep !== 2) {
       alert('Debes completar el subpaso de cierre de pauta antes de guardar.');
       return;
@@ -343,6 +356,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   continuarPaso2() {
+    this.registrarInteraccion();
     if (!this.pautaNutricional.calorias) {
       alert('Calcula y valida los macros diarios antes de avanzar al subpaso de cierre de pauta.');
       return;
@@ -437,10 +451,12 @@ export class EvaluacionComponent implements OnInit {
   }
 
   onMealMacroSliderChange(mealId: string, macro: MealPortion['macroDominante'], rawValue: number | string) {
+    this.registrarEdicionCampo(`macro-${mealId}-${macro}`);
     this.setMacroUnitsForMeal(mealId, macro, Number(rawValue));
   }
 
   applyMacroPreset(mealId: string, macro: MealPortion['macroDominante'], presetUnits: number) {
+    this.registrarEdicionCampo(`macro-${mealId}-${macro}`);
     this.setMacroUnitsForMeal(mealId, macro, presetUnits);
   }
 
@@ -501,6 +517,7 @@ export class EvaluacionComponent implements OnInit {
     if (this.useStandardPortions) {
       return;
     }
+    this.registrarEdicionCampo(`porcion-${portion.id}`);
     const range = this.getPortionRange(portion);
     const grams = this.clampGrams(Number(gramsValue), range.min, range.max);
     this.portionGrams[portion.id] = grams;
@@ -508,6 +525,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   toggleCustomPortions() {
+    this.registrarInteraccion();
     this.useStandardPortions = !this.useStandardPortions;
     if (this.useStandardPortions) {
       this.restablecerPorcionesEstandar();
@@ -621,6 +639,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   sugerirPautaIA() {
+    this.registrarInteraccion();
     if (!this.isAIEnabled) {
       return;
     }
@@ -666,6 +685,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   distribuirMacrosIA() {
+    this.registrarInteraccion();
     if (!this.isAIEnabled) {
       return;
     }
@@ -707,6 +727,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   sugerirMenuReal() {
+    this.registrarInteraccion();
     if (!this.planTienePorciones()) {
       alert('Primero arma el plan de macros arrastrando porciones o usando "Sugerir pauta"');
       return;
@@ -1098,6 +1119,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   simularAnalisisIA() {
+    this.registrarInteraccion();
     if (!this.pacienteSeleccionado) {
       alert('Primero debe seleccionar un paciente');
       return;
@@ -1131,6 +1153,7 @@ export class EvaluacionComponent implements OnInit {
   private actualizarPasoEnEjecucion() {
     if (!this.flujoAsignado || !this.pasosFlujo.length || this.flujoAsignado.estado === 'completado') {
       this.pasoEnEjecucion = null;
+      this.pasoMetricasActualId = null;
       return;
     }
 
@@ -1140,7 +1163,12 @@ export class EvaluacionComponent implements OnInit {
     const pasoPendiente = this.pasosFlujo.find(paso => !this.flujoAsignado!.ejecucion.some(e => e.pasoId === paso.id && e.fin));
     this.pasoEnEjecucion = pasoActual || pasoPendiente || null;
     this.iniciarPasoEvaluacionSiCorresponde();
-    this.prepararFeedbackBase();
+    const pasoActualId = this.pasoEnEjecucion?.id ?? null;
+    if (pasoActualId !== this.pasoMetricasActualId) {
+      this.pasoMetricasActualId = pasoActualId;
+      this.prepararFeedbackBase();
+      this.resetMetricasPasoRuntime();
+    }
   }
 
   private completarPasoPacientePendienteSiCorresponde() {
@@ -1159,8 +1187,12 @@ export class EvaluacionComponent implements OnInit {
 
     this.workflowService.completePaso(this.flujoAsignado.id, pasoPacientePendiente.id, {
       facilidad: this.isAIEnabled ? 4 : 3,
-      camposAutocompletados: this.isAIEnabled ? 6 : 0,
-      camposManuales: this.isAIEnabled ? 2 : 6,
+      camposAutocompletados: this.isAIEnabled ? Math.max(2, this.camposSugeridosIA.size) : 0,
+      camposManuales: Math.max(2, this.camposEditadosPaso.size),
+      interacciones: this.metricasPasoRuntime.interacciones,
+      iaSugerencias: this.metricasPasoRuntime.iaSugerencias,
+      iaAceptadas: this.metricasPasoRuntime.iaAceptadas,
+      iaCorregidas: this.metricasPasoRuntime.iaCorregidas,
       comentarios: 'Cierre automático de fase paciente al iniciar evaluación.'
     });
 
@@ -1182,8 +1214,8 @@ export class EvaluacionComponent implements OnInit {
   private prepararFeedbackBase() {
     this.feedbackPaso = {
       facilidad: this.isAIEnabled ? 4 : 3,
-      camposAutocompletados: this.isAIEnabled ? 6 : 0,
-      camposManuales: this.isAIEnabled ? 2 : 6,
+      camposAutocompletados: this.isAIEnabled ? 0 : 0,
+      camposManuales: 0,
       comentarios: ''
     };
   }
@@ -1222,6 +1254,7 @@ export class EvaluacionComponent implements OnInit {
     this.estimacionMasaMagra = +(ultimo.peso - this.estimacionMasaGrasa).toFixed(1);
 
     if (this.isAIEnabled) {
+      this.registrarSugerenciaIA('masaGrasa', 'masaMagra');
       this.aplicarEstimacionIA();
     }
   }
@@ -1234,11 +1267,18 @@ export class EvaluacionComponent implements OnInit {
     if (!this.isAIEnabled || this.estimacionMasaGrasa === 0 || this.estimacionMasaMagra === 0) {
       return;
     }
+    let aplicados = 0;
     if (forzar || !this.paciente.masaGrasa) {
       this.paciente.masaGrasa = this.estimacionMasaGrasa.toString();
+      aplicados += 1;
     }
     if (forzar || !this.paciente.masaMagra) {
       this.paciente.masaMagra = this.estimacionMasaMagra.toString();
+      aplicados += 1;
+    }
+    if (forzar && aplicados > 0) {
+      this.registrarAceptacionIA('masaGrasa', 'masaMagra');
+      this.registrarInteraccion();
     }
   }
 
@@ -1274,12 +1314,7 @@ export class EvaluacionComponent implements OnInit {
       this.workflowService.startPaso(this.flujoAsignado.id, paso.id);
     }
 
-    this.workflowService.completePaso(this.flujoAsignado.id, paso.id, {
-      facilidad: this.feedbackPaso.facilidad,
-      comentarios: this.feedbackPaso.comentarios,
-      camposAutocompletados: this.feedbackPaso.camposAutocompletados,
-      camposManuales: this.feedbackPaso.camposManuales
-    });
+    this.workflowService.completePaso(this.flujoAsignado.id, paso.id, this.buildPayloadPaso(this.feedbackPaso.comentarios));
     this.actualizarFlujoParaPaciente(this.flujoAsignado.pacienteId);
   }
 
@@ -1288,13 +1323,66 @@ export class EvaluacionComponent implements OnInit {
       return;
     }
 
-    this.workflowService.completePaso(this.flujoAsignado.id, pasoId, {
-      facilidad: this.feedbackPaso.facilidad,
-      comentarios: comentarios ?? this.feedbackPaso.comentarios,
-      camposAutocompletados: this.feedbackPaso.camposAutocompletados,
-      camposManuales: this.feedbackPaso.camposManuales
-    });
+    this.workflowService.completePaso(this.flujoAsignado.id, pasoId, this.buildPayloadPaso(comentarios));
     this.actualizarFlujoParaPaciente(this.flujoAsignado.pacienteId);
+  }
+
+  registrarEdicionCampo(campo: string) {
+    this.registrarInteraccion();
+    this.camposEditadosPaso.add(campo);
+    if (this.camposSugeridosIA.has(campo) && !this.camposAceptadosIA.has(campo)) {
+      this.camposCorregidosIA.add(campo);
+      this.metricasPasoRuntime.iaCorregidas = this.camposCorregidosIA.size;
+    }
+  }
+
+  private registrarInteraccion(cantidad = 1) {
+    this.metricasPasoRuntime.interacciones += Math.max(0, cantidad);
+  }
+
+  private registrarSugerenciaIA(...campos: string[]) {
+    campos.forEach(campo => this.camposSugeridosIA.add(campo));
+    this.metricasPasoRuntime.iaSugerencias = this.camposSugeridosIA.size;
+  }
+
+  private registrarAceptacionIA(...campos: string[]) {
+    campos.forEach(campo => {
+      if (this.camposSugeridosIA.has(campo)) {
+        this.camposAceptadosIA.add(campo);
+      }
+    });
+    this.metricasPasoRuntime.iaAceptadas = this.camposAceptadosIA.size;
+  }
+
+  private resetMetricasPasoRuntime() {
+    this.metricasPasoRuntime = {
+      interacciones: 0,
+      iaSugerencias: 0,
+      iaAceptadas: 0,
+      iaCorregidas: 0
+    };
+    this.camposEditadosPaso.clear();
+    this.camposSugeridosIA.clear();
+    this.camposAceptadosIA.clear();
+    this.camposCorregidosIA.clear();
+  }
+
+  private buildPayloadPaso(comentariosOverride?: string) {
+    const camposAutocompletados = this.isAIEnabled
+      ? Math.max(this.feedbackPaso.camposAutocompletados, this.camposSugeridosIA.size)
+      : 0;
+    const camposManuales = Math.max(this.feedbackPaso.camposManuales, this.camposEditadosPaso.size);
+
+    return {
+      facilidad: this.feedbackPaso.facilidad,
+      comentarios: comentariosOverride ?? this.feedbackPaso.comentarios,
+      camposAutocompletados,
+      camposManuales,
+      interacciones: this.metricasPasoRuntime.interacciones,
+      iaSugerencias: this.metricasPasoRuntime.iaSugerencias,
+      iaAceptadas: this.metricasPasoRuntime.iaAceptadas,
+      iaCorregidas: this.metricasPasoRuntime.iaCorregidas
+    };
   }
 
   private estaPasoCompletado(pasoId: string): boolean {
