@@ -126,6 +126,7 @@ export class EvaluacionComponent implements OnInit {
   showIADistributionWizard = false;
   iaHelpFlowStep: 1 | 2 = 1;
   iaHelpBaseApplied = false;
+  iaHelpFlowCompleted = false;
   iaDistributionWizard = {
     mealsPerDay: 5,
     priority: 'equilibrado' as 'equilibrado' | 'proteina' | 'carbohidrato' | 'grasa',
@@ -229,6 +230,9 @@ export class EvaluacionComponent implements OnInit {
     };
     this.showMealSuggestions = false;
     this.showIADistributionWizard = false;
+    this.iaHelpFlowStep = 1;
+    this.iaHelpBaseApplied = false;
+    this.iaHelpFlowCompleted = false;
     this.resetMealPlan();
 
     this.calcularEstimacionComposicion(paciente.id);
@@ -406,6 +410,9 @@ export class EvaluacionComponent implements OnInit {
     this.currentStep = 1;
     this.showMealSuggestions = false;
     this.showIADistributionWizard = false;
+    this.iaHelpFlowStep = 1;
+    this.iaHelpBaseApplied = false;
+    this.iaHelpFlowCompleted = false;
   }
 
   getMealTotals(mealId: string) {
@@ -736,6 +743,7 @@ export class EvaluacionComponent implements OnInit {
     this.registrarSugerenciaIA('flujoAyudaIA');
     this.iaHelpFlowStep = 1;
     this.iaHelpBaseApplied = false;
+    this.iaHelpFlowCompleted = false;
     this.showIADistributionWizard = true;
   }
 
@@ -766,10 +774,16 @@ export class EvaluacionComponent implements OnInit {
     if (!this.isAIEnabled || !this.pautaNutricional.calorias) {
       return;
     }
+    if (!this.iaHelpBaseApplied) {
+      alert('Primero debes completar el paso 1 de ayuda IA (distribución base).');
+      this.iaHelpFlowStep = 1;
+      return;
+    }
     this.registrarInteraccion();
     const profile = this.buildWizardDistributionProfile();
     this.distribuirMacrosConPesos(profile);
     this.registrarAceptacionIA('wizardDistribucion');
+    this.iaHelpFlowCompleted = true;
     this.showIADistributionWizard = false;
   }
 
@@ -811,6 +825,11 @@ export class EvaluacionComponent implements OnInit {
 
   sugerirMenuReal() {
     this.registrarInteraccion();
+    if (this.isAIEnabled && !this.iaHelpFlowCompleted) {
+      alert('En modo IA, primero completa los 2 pasos del flujo de ayuda IA.');
+      this.abrirAsistenteDistribucionIA();
+      return;
+    }
     if (!this.planTienePorciones()) {
       alert('Primero arma el plan de macros arrastrando porciones o ejecutando la ayuda IA.');
       return;

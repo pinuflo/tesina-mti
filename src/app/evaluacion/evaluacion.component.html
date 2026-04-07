@@ -408,7 +408,11 @@
             <i class="fas fa-magic me-1"></i>
             Re-ejecutar ayuda IA
           </button>
-          <button class="btn btn-success btn-sm" (click)="sugerirMenuReal()" [disabled]="!planTienePorciones()">
+          <button
+            class="btn btn-success btn-sm"
+            (click)="sugerirMenuReal()"
+            [disabled]="!planTienePorciones() || (isAIEnabled && !iaHelpFlowCompleted)"
+            [attr.title]="isAIEnabled && !iaHelpFlowCompleted ? 'Completa los 2 pasos de ayuda IA para habilitar menú real' : null">
             <i class="fas fa-utensils me-1"></i>
             Sugerir menú real
           </button>
