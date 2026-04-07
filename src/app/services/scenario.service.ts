@@ -95,7 +95,7 @@ export class ScenarioService {
         altura: 167,
         actividad: 'moderado',
         objetivo: 'perder',
-        notas: 'Permitir que la IA estime masa grasa/magra. Verificar que IA autocomplete hábitos y recordatorio 24h.'
+        notas: 'Registrar Peso, Altura, Masa grasa/magra manualmente (igual que sin IA). IA sugiere plan, objetivos grams macros.'
       },
       flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
