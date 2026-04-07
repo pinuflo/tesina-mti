@@ -134,7 +134,7 @@ export class ScenarioService {
         edad: 41,
         peso: 82,
         altura: 175,
-        actividad: 'moderado',
+        actividad: 'ligero',
         objetivo: 'mantener',
         masaGrasa: 24,
         masaMagra: 58,

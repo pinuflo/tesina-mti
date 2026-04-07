@@ -462,47 +462,47 @@ export class WorkflowService {
       modoObjetivo: 'con-ia',
       tiempoEstimadoMin: 65,
       objetivos: [
-        'Completar ficha clínica con soporte IA',
-        'Calcular requerimientos energéticos asistidos',
-        'Ajustar macros diarios con soporte IA',
-        'Guardar pauta final con apoyo de IA'
+        'Registrar ficha clínica completa',
+        'Calcular requerimientos energéticos',
+        'Definir macros diarios por objetivo',
+        'Cerrar pauta semanal validada'
       ],
       activo: true,
       objetivoFinal: this.getObjetivoComun(),
       pasos: [
-        this.createPaso('pacientes_ia_1', 'Importar paciente', 'Auto-rellenar ficha desde plantilla.', 'pacientes', 1, 'con-ia', true, [
-          'Ejecutar importación IA',
-          'Validar datos autocompletados',
-          'Confirmar consentimiento IA'
+        this.createPaso('pacientes_ia_1', 'Registrar paciente y hábitos', 'Completar ficha y recordatorio de 24h.', 'pacientes', 1, 'con-ia', true, [
+          'Completar datos personales',
+          'Registrar hábitos y recordatorio 24h',
+          'Adjuntar notas clínicas'
         ], [
-          'Auto-relleno de hábitos',
+          'Sugerencia de autocompletado de hábitos',
           'Clasificación de riesgo metabólico'
         ]),
-        this.createPaso('evaluacion_ia_1', 'Calcular requerimientos con IA', 'Generar y validar calorías objetivo asistidas.', 'evaluacion', 2, 'con-ia', true, [
-          'Correr simulación IA',
-          'Validar TMB y calorías objetivo sugeridas',
-          'Ajustar metas energéticas diarias'
+        this.createPaso('evaluacion_ia_1', 'Calcular requerimientos energéticos', 'Definir TMB y calorías objetivo del paciente.', 'evaluacion', 2, 'con-ia', true, [
+          'Calcular TMB con fórmula Harris-Benedict',
+          'Determinar calorías objetivo',
+          'Validar coherencia clínica de calorías objetivo'
         ], [
           'Predecir progreso 4 semanas'
         ]),
-        this.createPaso('evaluacion_ia_2', 'Definir macros diarios con IA', 'Ajustar distribución de macros asistida.', 'evaluacion', 3, 'con-ia', true, [
-          'Generar propuesta de macros diarios',
-          'Ajustar proteínas, carbohidratos y grasas',
-          'Validar distribución diaria final'
+        this.createPaso('evaluacion_ia_2', 'Definir macros diarios', 'Ajustar proteínas, carbohidratos y grasas diarias.', 'evaluacion', 3, 'con-ia', true, [
+          'Definir proteínas diarias por objetivo clínico',
+          'Ajustar carbohidratos y grasas diarias',
+          'Validar distribución de macros diarios'
         ], [
           'Comparar macrodistribución sugerida vs manual'
         ]),
-        this.createPaso('evaluacion_ia_3', 'Sugerir menú real con IA', 'Transformar porciones en platos reales sugeridos con soporte IA.', 'evaluacion', 4, 'con-ia', true, [
-          'Generar menú real sugerido por tiempo de comida',
+        this.createPaso('evaluacion_ia_3', 'Sugerir menú real', 'Transformar porciones en platos reales sugeridos.', 'evaluacion', 4, 'con-ia', true, [
+          'Generar sugerencias de menú real por tiempo de comida',
           'Validar consistencia con macros objetivo',
           'Confirmar selección para cierre final'
         ], [
           'Ranking de platos por afinidad de macros',
           'Ajustes automáticos por preferencia del paciente'
         ]),
-        this.createPaso('evaluacion_ia_4', 'Cerrar pauta semanal asistida', 'Guardar pauta final con soporte de IA.', 'evaluacion', 5, 'con-ia', true, [
-          'Armar pauta semanal sugerida',
-          'Revisar menú final por comidas',
+        this.createPaso('evaluacion_ia_4', 'Cerrar pauta semanal', 'Construir y guardar pauta nutricional final.', 'evaluacion', 5, 'con-ia', true, [
+          'Armar pauta semanal por comidas',
+          'Validar consistencia con macros objetivo',
           'Guardar pauta y cerrar flujo'
         ], [
           'Sugerir menú real automáticamente',
