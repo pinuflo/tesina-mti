@@ -95,7 +95,9 @@ export class ScenarioService {
         altura: 167,
         actividad: 'moderado',
         objetivo: 'perder',
-        notas: 'Registrar Peso, Altura, Masa grasa/magra manualmente (igual que sin IA). IA sugiere plan, objetivos grams macros.'
+        masaGrasa: 19,
+        masaMagra: 47,
+        notas: 'Registrar Peso 66 kg, Altura 167 cm, Masa grasa 19 kg, Masa magra 47 kg manualmente. IA sugiere plan y objetivos de macros.'
       },
       flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
@@ -133,7 +135,9 @@ export class ScenarioService {
         altura: 175,
         actividad: 'moderado',
         objetivo: 'mantener',
-        notas: 'Carga mínima manual: Peso, Altura, Antecedente HTA. IA debe sugerir objetivo 2.100 kcal y lista compras.'
+        masaGrasa: 24,
+        masaMagra: 58,
+        notas: 'Registrar Peso 82 kg, Altura 175 cm, Masa grasa 24 kg, Masa magra 58 kg manualmente. Antecedente HTA. IA sugiere objetivo 2.100 kcal.'
       },
       flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
