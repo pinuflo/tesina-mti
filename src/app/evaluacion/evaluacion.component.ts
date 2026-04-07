@@ -170,7 +170,7 @@ export class EvaluacionComponent implements OnInit {
 
   ngOnInit(): void {
     this.versionService.version$.subscribe(() => {
-      this.isAIEnabled = this.versionService.isAIEnabled();
+      this.syncAIMode();
     });
 
     this.dataService.pacientes$.subscribe(pacientes => {
@@ -1406,7 +1406,16 @@ export class EvaluacionComponent implements OnInit {
       this.flujoDetalle = null;
       this.pasosFlujo = [];
     }
+    this.syncAIMode();
     this.actualizarPasoEnEjecucion();
+  }
+
+  private syncAIMode() {
+    if (this.flujoAsignado) {
+      this.isAIEnabled = this.flujoAsignado.modoEjecutado === 'con-ia';
+      return;
+    }
+    this.isAIEnabled = this.versionService.isAIEnabled();
   }
 
   private actualizarPasoEnEjecucion() {

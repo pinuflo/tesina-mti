@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { VersionMode, ScenarioPatientPreset, OrdenValidacion, FlujoTrabajo, FlujoAsignado } from '../models/nutricion.models';
 import { DataService } from './data.service';
 import { WorkflowService } from './workflow.service';
+import { VersionService } from './version.service';
 
 export type ScenarioId = 'A1' | 'A2' | 'B1' | 'B2';
 export type ScenarioState = 'idle' | 'in-progress' | 'completed';
@@ -153,7 +154,11 @@ export class ScenarioService {
   private scenarioSummariesSubject = new BehaviorSubject<Record<ScenarioId, ScenarioRunSummary | null>>(this.loadScenarioSummaries());
   scenarioSummaries$ = this.scenarioSummariesSubject.asObservable();
 
-  constructor(private dataService: DataService, private workflowService: WorkflowService) {
+  constructor(
+    private dataService: DataService,
+    private workflowService: WorkflowService,
+    private versionService: VersionService
+  ) {
     this.workflowService.asignaciones$.subscribe(() => {
       this.syncProgressWithWorkflow();
     });
@@ -189,6 +194,7 @@ export class ScenarioService {
       return;
     }
     this.dataService.resetToSeedData();
+    this.versionService.setVersion(scenario.mode);
     this.syncScenarioAssignment(scenario);
     Object.keys(states).forEach(key => {
       const k = key as ScenarioId;
