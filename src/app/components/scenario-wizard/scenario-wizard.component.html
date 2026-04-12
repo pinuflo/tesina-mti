@@ -24,28 +24,89 @@
 
   <ng-container *ngIf="!currentScenario; else scenarioInProgress">
     <div class="scenario-grid">
-      <div class="scenario-card" *ngFor="let scenario of scenarios" [class.disabled]="scenarioStates[scenario.id] === 'completed'">
+      <div
+        class="scenario-card"
+        *ngFor="let scenario of scenarios"
+        [class.disabled]="scenarioStates[scenario.id] === 'completed'"
+        [class.scenario-card--expanded]="isScenarioExpanded(scenario.id)"
+        [class.scenario-card--compact]="!isScenarioExpanded(scenario.id)"
+        (click)="selectScenarioCard(scenario.id)">
         <div class="scenario-card-header">
-          <div class="badge" [ngClass]="getStateClass(scenario.id)">
-            {{ scenarioStates[scenario.id] === 'completed' ? 'Completado' : 'Pendiente' }}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+            <div class="badge" [ngClass]="getStateClass(scenario.id)">
+              {{ scenarioStates[scenario.id] === 'completed' ? 'Completado' : 'Pendiente' }}
+            </div>
+            <span class="scenario-order-badge" *ngIf="scenarioStates[scenario.id] !== 'completed'">
+              {{ scenario.recommendedOrder }}.º
+            </span>
           </div>
           <h5>{{ scenario.title }}</h5>
           <p>{{ scenario.patientName }} · {{ scenario.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</p>
         </div>
-        <p class="scenario-description">{{ scenario.description }}</p>
-        <div class="scenario-preset">
-          <p class="preset-label">Datos a ingresar</p>
-          <ul>
-            <li>Edad: {{ scenario.patientPreset.edad }} años · Peso: {{ scenario.patientPreset.peso }} kg</li>
-            <li>Altura: {{ scenario.patientPreset.altura }} cm · Actividad: {{ scenario.patientPreset.actividad | titlecase }}</li>
-            <li>Objetivo: {{ scenario.patientPreset.objetivo | titlecase }}</li>
-            <li *ngIf="scenario.patientPreset.masaGrasa">Masa grasa/magra: {{ scenario.patientPreset.masaGrasa }} kg / {{ scenario.patientPreset.masaMagra }} kg</li>
-            <li *ngIf="scenario.patientPreset.notas">{{ scenario.patientPreset.notas }}</li>
-          </ul>
-        </div>
-        <button class="btn btn-primary" (click)="startScenario(scenario.id)" [disabled]="scenarioStates[scenario.id] === 'completed'">
-          Iniciar prueba
-        </button>
+
+        <ng-container *ngIf="!isScenarioExpanded(scenario.id)">
+          <p class="scenario-description scenario-description--compact">{{ scenario.description }}</p>
+          <div class="scenario-compact-meta">
+            {{ getScenarioCompactMeta(scenario) }}
+          </div>
+          <button class="btn btn-outline-primary btn-sm align-self-start" (click)="selectScenarioCard(scenario.id); $event.stopPropagation()">
+            Ver detalle
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isScenarioExpanded(scenario.id)">
+          <ng-container *ngIf="scenarioStates[scenario.id] === 'completed' && getScenarioSummary(scenario.id) as summary; else pendingScenarioCard">
+            <div class="scenario-completed-summary">
+              <div class="scenario-completed-metrics">
+                <div>
+                  <span class="label">Tiempo promedio</span>
+                  <strong>{{ summary.tiempoPromedioMin ? (summary.tiempoPromedioMin | number:'1.0-1') + ' min' : '–' }}</strong>
+                </div>
+                <div>
+                  <span class="label">Clicks promedio</span>
+                  <strong>{{ summary.clicksPromedio ? (summary.clicksPromedio | number:'1.0-1') : '–' }}</strong>
+                </div>
+              </div>
+              <div class="scenario-completed-meta">
+                <small>Última ejecución: {{ summary.finishedAt | date:'dd/MM · HH:mm' }}</small>
+                <small>{{ summary.ejecucionesCompletadas }} ejecución(es) registrada(s)</small>
+              </div>
+            </div>
+            <button class="btn btn-outline-secondary" disabled>
+              Flujo completado
+            </button>
+          </ng-container>
+
+          <ng-template #pendingScenarioCard>
+            <p class="scenario-description">{{ scenario.description }}</p>
+
+            <div class="scenario-preset scenario-preset--grid">
+              <p class="preset-label">Resumen clínico</p>
+              <div class="scenario-data-grid">
+                <span>Edad: {{ scenario.patientPreset.edad }} años</span>
+                <span>Peso: {{ scenario.patientPreset.peso }} kg</span>
+                <span>Altura: {{ scenario.patientPreset.altura }} cm</span>
+                <span>Actividad: {{ scenario.patientPreset.actividad | titlecase }}</span>
+                <span>Objetivo: {{ scenario.patientPreset.objetivo | titlecase }}</span>
+                <span *ngIf="scenario.patientPreset.masaGrasa">Masa grasa/magra: {{ scenario.patientPreset.masaGrasa }} / {{ scenario.patientPreset.masaMagra }} kg</span>
+              </div>
+            </div>
+
+            <div class="scenario-preset scenario-instructions">
+              <p class="preset-label">Instrucciones clave del flujo</p>
+              <ol>
+                <li *ngFor="let instruction of getScenarioInstructionHighlights(scenario)">
+                  {{ instruction }}
+                </li>
+              </ol>
+              <small *ngIf="scenario.patientPreset.notas" class="text-muted d-block mt-1">Nota: {{ scenario.patientPreset.notas }}</small>
+            </div>
+
+            <button class="btn btn-primary" (click)="startScenario(scenario.id); $event.stopPropagation()" [disabled]="scenarioStates[scenario.id] === 'completed'">
+              Iniciar prueba
+            </button>
+          </ng-template>
+        </ng-container>
       </div>
     </div>
 
@@ -69,30 +130,21 @@
           <p class="result-patient">{{ summary.patientName }}</p>
           <div class="result-metrics">
             <div>
-              <span class="label">Tiempo total</span>
-              <strong>{{ summary.tiempoTotalMin ? (summary.tiempoTotalMin | number:'1.0-1') + ' min' : '–' }}</strong>
+              <span class="label">Tiempo promedio</span>
+              <strong>{{ summary.tiempoPromedioMin ? (summary.tiempoPromedioMin | number:'1.0-1') + ' min' : '–' }}</strong>
             </div>
             <div>
-              <span class="label">Facilidad</span>
-              <strong>{{ summary.facilidadPromedio ? (summary.facilidadPromedio | number:'1.0-1') : '–' }}</strong>
+              <span class="label">Clicks promedio</span>
+              <strong>{{ summary.clicksPromedio ? (summary.clicksPromedio | number:'1.0-1') : '–' }}</strong>
             </div>
             <div>
-              <span class="label">Auto / Manual</span>
-              <strong>{{ summary.camposAutocompletados ?? 0 }} / {{ summary.camposManuales ?? 0 }}</strong>
+              <span class="label">Clicks último flujo</span>
+              <strong>{{ summary.interaccionesTotal ?? 0 }}</strong>
             </div>
           </div>
-          <div class="result-progress">
-            <div class="result-progress-label">
-              <small>PASOS COMPLETADOS</small>
-              <strong>{{ summary.stepsCompleted }} / {{ summary.totalSteps }}</strong>
-            </div>
-            <div class="progress">
-              <div class="progress-bar" [style.width.%]="summary.totalSteps ? (summary.stepsCompleted / summary.totalSteps) * 100 : 0"></div>
-            </div>
-          </div>
-          <div class="result-visits" *ngIf="summary.completedVisits.length">
-            <small>Visitas registradas:</small>
-            <span *ngFor="let visitId of summary.completedVisits" class="visit-pill">{{ visitId | uppercase }}</span>
+          <div class="result-meta-line">
+            <small>{{ summary.ejecucionesCompletadas }} ejecución(es)</small>
+            <small>{{ summary.stepsCompleted }} / {{ summary.totalSteps }} pasos</small>
           </div>
         </div>
       </div>
@@ -117,8 +169,12 @@
         </div>
         <div class="phase-right-block">
           <div class="time-chip" *ngIf="elapsedScenarioTime">
-            <span>Tiempo de flujo</span>
+            <span>Tiempo</span>
             <strong>{{ elapsedScenarioTime }}</strong>
+          </div>
+          <div class="time-chip click-chip">
+            <span>Clicks</span>
+            <strong>{{ liveClickCount }}</strong>
           </div>
           <span class="visit-status" [class]="'visit-status ' + getCurrentPhaseStatusClass()">
             {{ getCurrentPhaseStatusLabel() }}
@@ -160,26 +216,15 @@
         </div>
       </div>
 
+      <button class="btn btn-primary btn-sm w-100 go-to-module-btn" (click)="goToCurrentModule()" *ngIf="currentVisit">
+        <i class="fas fa-arrow-right me-1"></i>
+        Ir a {{ currentVisit.route | titlecase }}
+      </button>
+
       <div class="visit-details" *ngIf="currentVisit">
         <div class="primary-action-hint">
           <p class="hint-label">Acción principal de esta etapa</p>
-          <strong>Completar los datos solicitados en el módulo activo y registrar el resultado del paso.</strong>
-        </div>
-        <div class="phase-setup" *ngIf="currentVisit.id === 'visita_1' && currentScenario?.patientPreset">
-          <p class="phase-label">Cargar antes de iniciar:</p>
-          <ul>
-            <li>Edad {{ currentScenario.patientPreset.edad }} años</li>
-            <li>Peso {{ currentScenario.patientPreset.peso }} kg</li>
-            <li>Altura {{ currentScenario.patientPreset.altura }} cm</li>
-            <li>Actividad {{ currentScenario.patientPreset.actividad | titlecase }}</li>
-            <li>Objetivo {{ currentScenario.patientPreset.objetivo | titlecase }}</li>
-            <li *ngIf="currentScenario.patientPreset.masaGrasa && currentScenario.patientPreset.masaMagra">
-              Masa grasa {{ currentScenario.patientPreset.masaGrasa }} kg · Masa magra {{ currentScenario.patientPreset.masaMagra }} kg
-            </li>
-          </ul>
-          <p class="phase-note" *ngIf="currentScenario.patientPreset.notas">
-            {{ currentScenario.patientPreset.notas }}
-          </p>
+          <strong>{{ getVisitActionHint(currentVisit.id) }}</strong>
         </div>
         <h6>Instrucciones actuales</h6>
         <ul>
@@ -218,11 +263,15 @@
               <strong>{{ completionSummary.tiempoTotalMin ? (completionSummary.tiempoTotalMin | number:'1.0-1') + ' min' : 'Sin datos' }}</strong>
             </div>
             <div class="completion-kpi-card">
+              <span class="label">Clicks totales</span>
+              <strong>{{ completionSummary.interaccionesTotal ?? 0 }}</strong>
+            </div>
+            <div class="completion-kpi-card">
               <span class="label">Facilidad promedio</span>
               <strong>{{ completionSummary.facilidadPromedio ? (completionSummary.facilidadPromedio | number:'1.0-1') + ' / 5' : 'Sin datos' }}</strong>
             </div>
             <div class="completion-kpi-card">
-              <span class="label">Auto / Manual</span>
+              <span class="label">Autocompletados / manuales</span>
               <strong>{{ completionSummary.camposAutocompletados ?? 0 }} / {{ completionSummary.camposManuales ?? 0 }}</strong>
             </div>
             <div class="completion-kpi-card">
@@ -234,7 +283,7 @@
           <div class="mt-3" *ngIf="completionSummary.completedVisits.length">
             <small class="text-muted d-block mb-1">Visitas completadas</small>
             <div class="result-visits">
-              <span *ngFor="let visitId of completionSummary.completedVisits" class="visit-pill">{{ visitId | uppercase }}</span>
+              <span *ngFor="let visitId of completionSummary.completedVisits" class="visit-pill">{{ getVisitLabel(visitId) }}</span>
             </div>
           </div>
 
@@ -277,4 +326,42 @@
   </div>
 
   <div class="modal-backdrop fade" [class.show]="showCompletionModal" *ngIf="showCompletionModal" (click)="closeCompletionModal()"></div>
+
+  <!-- Likert facilidad modal (per visit) -->
+  <div class="modal facility-modal-wrapper" tabindex="-1" [class.show]="showFacilityModal" [style.display]="showFacilityModal ? 'block' : 'none'" *ngIf="showFacilityModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content facility-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-star me-2 text-warning"></i>
+            Fase completada
+          </h5>
+        </div>
+        <div class="modal-body">
+          <p class="facility-visit-name">{{ facilityVisit?.title }}</p>
+          <p class="mb-3">&#191;Qué tan fácil fue completar esta fase?</p>
+          <div class="likert-stars">
+            <button *ngFor="let star of getFacilityStars()"
+                    class="star-btn"
+                    [class.active]="facilityRating >= star"
+                    (click)="setFacilityRating(star)">
+              <i class="fas fa-star"></i>
+            </button>
+          </div>
+          <div class="likert-labels">
+            <span>Muy difícil</span>
+            <span>Muy fácil</span>
+          </div>
+          <textarea class="form-control mt-3" rows="2" placeholder="Comentario opcional..."
+                    [value]="facilityComment"
+                    (input)="facilityComment = $any($event.target).value"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-link text-muted" (click)="skipFacilityRating()">Omitir</button>
+          <button class="btn btn-primary" (click)="submitFacilityRating()" [disabled]="facilityRating === 0">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show facility-modal-backdrop" *ngIf="showFacilityModal"></div>
 </div>

@@ -16,6 +16,22 @@
         <p class="mb-0">Trabajamos con cuatro escenarios fijos (Lucía/Diego x Manual/IA). Selecciona el flujo desde el asistente para iniciar una iteración.</p>
       </div>
 
+      <!-- All completed -->
+      <div class="alert alert-success mt-3" *ngIf="allScenariosCompleted" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>¡Todos los flujos completados!</strong> Revisa los resultados capturados en el panel del asistente.
+      </div>
+
+      <!-- Next recommended scenario -->
+      <div class="alert alert-primary mt-3 d-flex align-items-center justify-content-between flex-wrap gap-2"
+           *ngIf="!allScenariosCompleted && nextScenario && lastCompletedTitle" role="alert">
+        <div>
+          <strong>{{ lastCompletedTitle }}</strong> completado.
+          Siguiente acción: inicia <strong>{{ nextScenario.title }} ({{ nextScenario.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }})</strong> desde el panel de la derecha.
+        </div>
+        <span class="badge bg-primary rounded-pill">{{ nextScenario.recommendedOrder }}° de 4</span>
+      </div>
+
       <div class="mt-4">
         <div class="alert alert-secondary d-inline-flex align-items-center gap-2 mb-0">
           <i class="fas fa-route"></i>

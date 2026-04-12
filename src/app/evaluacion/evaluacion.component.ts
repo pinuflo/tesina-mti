@@ -29,6 +29,8 @@ import { MacroTagComponent } from '../components/macro-tag/macro-tag.component';
   styleUrl: './evaluacion.component.scss'
 })
 export class EvaluacionComponent implements OnInit {
+  private readonly allMealOrder = ['desayuno', 'media_manana', 'almuerzo', 'colacion', 'cena'] as const;
+  private readonly threeMealOrder = ['desayuno', 'almuerzo', 'cena'] as const;
   // Expone Math para poder usar Math.abs desde la plantilla
   readonly Math = Math;
   isAIEnabled = false;
@@ -37,6 +39,7 @@ export class EvaluacionComponent implements OnInit {
   currentStep: 1 | 2 = 1;
   scenarioPreset: ScenarioPatientPreset | null = null;
   scenarioPatientName: string | null = null;
+  requiredMealTimes: 3 | 5 = 5;
   
   // Datos del paciente
   paciente = {
@@ -234,6 +237,7 @@ export class EvaluacionComponent implements OnInit {
     this.iaHelpBaseApplied = false;
     this.iaHelpFlowCompleted = false;
     this.resetMealPlan();
+    this.syncScenarioMealConstraint();
 
     this.calcularEstimacionComposicion(paciente.id);
     this.actualizarFlujoParaPaciente(paciente.id);
@@ -313,6 +317,12 @@ export class EvaluacionComponent implements OnInit {
 
     if (!this.planTienePorciones()) {
       alert('Arma al menos un día de pauta semanal arrastrando porciones o usa "Sugerir pauta"');
+      return;
+    }
+
+    const mealTimeError = this.getMealTimeRequirementError();
+    if (mealTimeError) {
+      alert(mealTimeError);
       return;
     }
 
@@ -613,7 +623,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   getDailyTotals() {
-    return this.dailyMealPlan.meals.reduce(
+    return this.getVisibleMeals().reduce(
       (acc, meal) => {
         meal.portions.forEach(portion => {
           acc.calorias += portion.calorias * portion.units;
@@ -835,6 +845,12 @@ export class EvaluacionComponent implements OnInit {
       return;
     }
 
+    const mealTimeError = this.getMealTimeRequirementError();
+    if (mealTimeError) {
+      alert(mealTimeError);
+      return;
+    }
+
     console.log('Plan de comidas:', this.dailyMealPlan.meals);
     this.mealSuggestions = this.mealCatalogService.suggestFullMenu(this.dailyMealPlan.meals);
     console.log('Sugerencias generadas:', this.mealSuggestions);
@@ -863,14 +879,15 @@ export class EvaluacionComponent implements OnInit {
   ): Record<string, number> {
     const map: Record<string, number> = {};
     const baseProfile = profile || this.mealMacroDistribution;
-    this.dailyMealPlan.meals.forEach(meal => {
+    this.getVisibleMeals().forEach(meal => {
       const preset = baseProfile[meal.id];
       map[meal.id] = preset ? preset[macro] : 0;
     });
     const totalWeight = Object.values(map).reduce((sum, value) => sum + value, 0);
-    if (totalWeight === 0 && this.dailyMealPlan.meals.length) {
-      const equalShare = 1 / this.dailyMealPlan.meals.length;
-      this.dailyMealPlan.meals.forEach(meal => {
+    const visibleMeals = this.getVisibleMeals();
+    if (totalWeight === 0 && visibleMeals.length) {
+      const equalShare = 1 / visibleMeals.length;
+      visibleMeals.forEach(meal => {
         map[meal.id] = equalShare;
       });
     }
@@ -913,7 +930,7 @@ export class EvaluacionComponent implements OnInit {
       cena: { proteina: 0.2, carbohidrato: 0.15, grasa: 0.25 }
     };
 
-    if (this.iaDistributionWizard.mealsPerDay === 3) {
+    if (this.requiredMealTimes === 3 || this.iaDistributionWizard.mealsPerDay === 3) {
       base.media_manana = { proteina: 0.03, carbohidrato: 0.03, grasa: 0.03 };
       base.colacion = { proteina: 0.03, carbohidrato: 0.03, grasa: 0.03 };
       base.desayuno.proteina += 0.07;
@@ -921,7 +938,7 @@ export class EvaluacionComponent implements OnInit {
       base.cena.grasa += 0.07;
     }
 
-    if (!this.iaDistributionWizard.includeSnacks) {
+    if (this.requiredMealTimes === 3 || !this.iaDistributionWizard.includeSnacks) {
       base.media_manana = { proteina: 0.01, carbohidrato: 0.01, grasa: 0.01 };
       base.colacion = { proteina: 0.01, carbohidrato: 0.01, grasa: 0.01 };
       base.desayuno.proteina += 0.05;
@@ -1106,6 +1123,41 @@ export class EvaluacionComponent implements OnInit {
     return this.dailyMealPlan.meals.find(meal => meal.id === mealId)?.title || mealId;
   }
 
+  getVisibleMeals() {
+    const visibleMealIds = new Set(this.getRequiredMealIds());
+    return this.dailyMealPlan.meals.filter(meal => visibleMealIds.has(meal.id));
+  }
+
+  getRequiredMealTimesLabel(): string {
+    return this.requiredMealTimes === 3 ? '3 tiempos obligatorios' : '5 tiempos obligatorios';
+  }
+
+  getRequiredMealNamesLabel(): string {
+    return this.getRequiredMealIds()
+      .map(mealId => this.getMealTitleById(mealId))
+      .join(', ');
+  }
+
+  getVisibleMealSuggestions(): MealSuggestion[] {
+    return this.mealSuggestions.filter(suggestion => suggestion.targetCalorias > 0);
+  }
+
+  hasRequiredMealTimesConfigured(): boolean {
+    const requiredMealIds = this.getRequiredMealIds();
+    return requiredMealIds.every(mealId => {
+      const meal = this.dailyMealPlan.meals.find(currentMeal => currentMeal.id === mealId);
+      return !!meal?.portions.length;
+    });
+  }
+
+  getMealTimeRequirementError(): string | null {
+    if (this.hasRequiredMealTimesConfigured()) {
+      return null;
+    }
+
+    return `Debes completar ${this.requiredMealTimes} tiempos de comida en este flujo: ${this.getRequiredMealNamesLabel()}.`;
+  }
+
   private buildEmptyDailyPlan(): DailyMealPlan {
     return {
       day: 'Semana tipo',
@@ -1120,7 +1172,7 @@ export class EvaluacionComponent implements OnInit {
   }
 
   planTienePorciones() {
-    return this.dailyMealPlan.meals.some(meal => meal.portions.length > 0);
+    return this.getVisibleMeals().some(meal => meal.portions.length > 0);
   }
 
   private agregarPorcionAMeal(portionId: string, mealId: string) {
@@ -1303,12 +1355,15 @@ export class EvaluacionComponent implements OnInit {
 
   private ensureScenarioPreset(): boolean {
     if (this.scenarioPreset) {
+      this.syncScenarioMealConstraint();
       return true;
     }
     const current = this.scenarioService.getCurrentScenario();
     if (current) {
       this.scenarioPreset = current.scenario.patientPreset;
       this.scenarioPatientName = current.scenario.patientName;
+      this.requiredMealTimes = current.scenario.requiredMealTimes;
+      this.syncScenarioMealConstraint();
       return true;
     }
     alert('Debes tener un flujo en curso desde el panel derecho para avanzar al siguiente subpaso.');
@@ -1371,8 +1426,11 @@ export class EvaluacionComponent implements OnInit {
   generarRecomendacionesBasicas(): string {
     const masaMagra = parseFloat(this.paciente.masaMagra || '0');
     const proteinasObjetivo = masaMagra > 0 ? Math.round(masaMagra * 1.6) : Math.round(parseFloat(this.paciente.peso || '0') * 1.2);
+    const mealPattern = this.requiredMealTimes === 3
+      ? 'Realizar 3 comidas principales'
+      : 'Realizar 3 comidas principales y 2 colaciones';
     return `
-      - Realizar 3 comidas principales y 2 colaciones
+      - ${mealPattern}
       - Incluir aproximadamente ${proteinasObjetivo}g de proteínas totales al día
       - Consumir al menos 5 porciones de frutas y verduras al día
       - Beber 8 vasos de agua diarios
@@ -1458,8 +1516,43 @@ export class EvaluacionComponent implements OnInit {
       this.flujoDetalle = null;
       this.pasosFlujo = [];
     }
+    this.syncScenarioMealConstraint();
     this.syncAIMode();
     this.actualizarPasoEnEjecucion();
+  }
+
+  private syncScenarioMealConstraint() {
+    const currentScenario = this.scenarioService.getCurrentScenario();
+    if (currentScenario) {
+      this.requiredMealTimes = currentScenario.scenario.requiredMealTimes;
+      this.scenarioPreset = currentScenario.scenario.patientPreset;
+      this.scenarioPatientName = currentScenario.scenario.patientName;
+    } else if (this.pacienteSeleccionado?.id === 'pac_manual') {
+      this.requiredMealTimes = 3;
+    } else {
+      this.requiredMealTimes = 5;
+    }
+
+    this.iaDistributionWizard.mealsPerDay = this.requiredMealTimes;
+    this.iaDistributionWizard.includeSnacks = this.requiredMealTimes === 5;
+    this.enforceRequiredMealVisibility();
+  }
+
+  private getRequiredMealIds(): string[] {
+    return [...(this.requiredMealTimes === 3 ? this.threeMealOrder : this.allMealOrder)];
+  }
+
+  private enforceRequiredMealVisibility() {
+    if (this.requiredMealTimes !== 3) {
+      return;
+    }
+
+    this.dailyMealPlan.meals = this.dailyMealPlan.meals.map(meal => {
+      if (meal.id === 'media_manana' || meal.id === 'colacion') {
+        return { ...meal, portions: [] };
+      }
+      return meal;
+    });
   }
 
   private syncAIMode() {

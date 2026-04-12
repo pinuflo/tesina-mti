@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScenarioService, ScenarioDefinition, ScenarioId, ScenarioState, ScenarioRunSummary, ScenarioVisit } from '../../services/scenario.service';
+import { WorkflowService } from '../../services/workflow.service';
 import { filter, Subscription } from 'rxjs';
 import { NavigationEnd, Router } from '@angular/router';
 
@@ -16,6 +17,7 @@ type VisitStatus = 'completed' | 'in-progress' | 'not-started';
 export class ScenarioWizardComponent implements OnInit, OnDestroy {
   scenarios: ScenarioDefinition[] = [];
   scenarioStates: Record<string, ScenarioState> = {};
+  selectedScenarioId: ScenarioId | null = null;
   currentScenario: ScenarioDefinition | null = null;
   visitId: string | null = null;
   completedVisits: string[] = [];
@@ -24,6 +26,17 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
   showCompletionModal = false;
   completionSummary: ScenarioRunSummary | null = null;
   completionTwinSummary: ScenarioRunSummary | null = null;
+
+  // Likert per-visit modal
+  showFacilityModal = false;
+  facilityVisit: { id: string; title: string; pasoId: string } | null = null;
+  facilityRating = 0;
+  facilityComment = '';
+  private facilityQueue: { id: string; title: string; pasoId: string }[] = [];
+  private blockCompletionModal = false;
+  private prevCompletedVisits: string[] = [];
+  private lastKnownScenario: ScenarioDefinition | null = null;
+
   private summaryByScenarioId: Partial<Record<ScenarioId, ScenarioRunSummary>> = {};
   private pendingCompletedScenarioId: ScenarioId | null = null;
   private lastActiveScenarioId: ScenarioId | null = null;
@@ -38,10 +51,11 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private scenarioService: ScenarioService, private router: Router) {}
+  constructor(private scenarioService: ScenarioService, private router: Router, private workflowService: WorkflowService) {}
 
   ngOnInit(): void {
     this.scenarios = this.scenarioService.getScenarios();
+    this.selectedScenarioId = null;
     this.currentRouteModule = this.getRouteModule(this.router.url);
     this.subscriptions.push(
       this.router.events
@@ -55,6 +69,15 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
       }),
       this.scenarioService.activeProgress$.subscribe(progress => {
         if (!progress) {
+          // Detect last-visit completion before clearing state
+          if (this.lastKnownScenario && this.prevCompletedVisits.length < this.lastKnownScenario.visits.length) {
+            const lastVisit = this.lastKnownScenario.visits[this.lastKnownScenario.visits.length - 1];
+            const pasoId = lastVisit?.completionPasoIds?.[0] ?? lastVisit.id;
+            this.facilityQueue.push({ id: lastVisit.id, title: lastVisit.title, pasoId });
+            this.blockCompletionModal = true;
+          }
+          this.prevCompletedVisits = [];
+
           this.currentScenario = null;
           this.visitId = null;
           this.completedVisits = [];
@@ -65,12 +88,34 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
 
           if (this.lastActiveScenarioId && this.scenarioStates[this.lastActiveScenarioId] === 'completed') {
             this.pendingCompletedScenarioId = this.lastActiveScenarioId;
-            this.tryOpenCompletionModal();
+            if (!this.blockCompletionModal) {
+              this.tryOpenCompletionModal();
+            } else if (!this.showFacilityModal) {
+              this.showNextFacilityModal();
+            }
           }
 
           this.lastActiveScenarioId = null;
         } else {
           this.currentScenario = this.scenarioService.getScenario(progress.scenarioId);
+          this.lastKnownScenario = this.currentScenario;
+
+          // Detect newly completed visits for Likert queue
+          const newlyCompleted = progress.completedVisits.filter(vId => !this.prevCompletedVisits.includes(vId));
+          if (newlyCompleted.length > 0) {
+            for (const visitId of newlyCompleted) {
+              const visit = this.currentScenario.visits.find(v => v.id === visitId);
+              const pasoId = visit?.completionPasoIds?.[0] ?? visitId;
+              if (visit) {
+                this.facilityQueue.push({ id: visitId, title: visit.title, pasoId });
+              }
+            }
+            if (!this.showFacilityModal) {
+              this.showNextFacilityModal();
+            }
+          }
+          this.prevCompletedVisits = [...progress.completedVisits];
+
           this.visitId = progress.visitId;
           this.completedVisits = progress.completedVisits;
           this.scenarioStartedAt = progress.startedAt;
@@ -202,6 +247,36 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
     this.navigateToRoute(firstRoute);
   }
 
+  selectScenarioCard(id: ScenarioId): void {
+    this.selectedScenarioId = id;
+  }
+
+  isScenarioExpanded(id: ScenarioId): boolean {
+    return this.selectedScenarioId === id;
+  }
+
+  getScenarioCompactMeta(scenario: ScenarioDefinition): string {
+    const fases = `${scenario.visits.length} fases`;
+    const tiempos = `${scenario.requiredMealTimes} tiempos de comida`;
+    const modo = scenario.mode === 'con-ia' ? 'asistido' : 'manual';
+    return `${fases} · ${tiempos} · flujo ${modo}`;
+  }
+
+  getScenarioInstructionHighlights(scenario: ScenarioDefinition): string[] {
+    const highlights = scenario.visits.map(visit => {
+      const principal = visit.instructions[0] || visit.expectedOutcome;
+      return `${visit.title}: ${principal}`;
+    });
+
+    highlights.push(
+      scenario.requiredMealTimes === 3
+        ? 'Cierre nutricional: completar 3 tiempos (desayuno, almuerzo y cena).'
+        : 'Cierre nutricional: completar 5 tiempos (incluye colaciones).'
+    );
+
+    return highlights;
+  }
+
   resetScenario(id: string) {
     this.scenarioService.resetScenario(id as any);
   }
@@ -250,8 +325,106 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
     return this.summaries.length > 0;
   }
 
+  get liveClickCount(): number {
+    void this.nowTick; // access nowTick so change detection re-evaluates this getter each tick
+    return this.scenarioService.getActiveClickCount();
+  }
+
+  getScenarioSummary(id: ScenarioId): ScenarioRunSummary | null {
+    return this.summaryByScenarioId[id] || null;
+  }
+
+  // ── Likert facility modal ────────────────────────────────────────────────
+  showNextFacilityModal(): void {
+    if (this.facilityQueue.length === 0) {
+      this.blockCompletionModal = false;
+      this.tryOpenCompletionModal();
+      return;
+    }
+    this.facilityVisit = this.facilityQueue.shift()!;
+    this.facilityRating = 0;
+    this.facilityComment = '';
+    this.showFacilityModal = true;
+  }
+
+  submitFacilityRating(): void {
+    if (this.facilityVisit && this.lastKnownScenario && this.facilityRating > 0) {
+      const asignacionId = this.scenarioService.getLatestAssignmentId(
+        this.lastKnownScenario.patientId,
+        this.lastKnownScenario.flujoId
+      );
+      if (asignacionId) {
+        this.workflowService.registrarFacilidad(
+          asignacionId,
+          this.facilityVisit.pasoId,
+          this.facilityRating,
+          this.facilityComment || undefined
+        );
+      }
+    }
+    this.closeFacilityModal();
+  }
+
+  skipFacilityRating(): void {
+    this.closeFacilityModal();
+  }
+
+  private closeFacilityModal(): void {
+    this.facilityVisit = null;
+    this.showFacilityModal = false;
+    this.facilityRating = 0;
+    this.facilityComment = '';
+    this.showNextFacilityModal();
+  }
+
+  setFacilityRating(value: number): void {
+    this.facilityRating = value;
+  }
+
+  getFacilityStars(): number[] {
+    return [1, 2, 3, 4, 5];
+  }
+
+  // ── Visit helpers ────────────────────────────────────────────────────────
+  getVisitActionHint(visitId: string): string {
+    if (!this.currentScenario) {
+      return 'Completa las acciones en el módulo indicado para avanzar al siguiente paso.';
+    }
+    const name = this.currentScenario.patientName;
+    const ia = this.currentScenario.mode === 'con-ia';
+    switch (visitId) {
+      case 'visita_1':
+        return `Selecciona a ${name} en el módulo Pacientes y completa los datos antropométricos y nivel de actividad.`;
+      case 'visita_2':
+        return `En Evaluación → Subpaso 1, calcula ${ia ? 'y valida las' : 'la'} TMB y calorías objetivo${ia ? ' sugeridas por IA' : ''}.`;
+      case 'visita_3':
+        return `En Evaluación → Subpaso 1, define la distribución de macros diarios${ia ? ' con asistencia IA' : ''} y confirma el resultado.`;
+      case 'visita_4':
+        return `En Evaluación → Subpaso 2, arma la pauta semanal${ia ? ', revisa el menú IA,' : ','} asigna porciones y guarda la pauta final.`;
+      default:
+        return 'Completa las acciones en el módulo indicado para avanzar al siguiente paso.';
+    }
+  }
+
+  goToCurrentModule(): void {
+    const route = this.currentVisit?.route;
+    if (route) {
+      this.lastVisitRoute = null;
+      this.navigateToRoute(route);
+    }
+  }
+
+  getVisitLabel(visitId: string): string {
+    if (!this.completionSummary) return visitId.toUpperCase();
+    const scenario = this.scenarioService.getScenario(this.completionSummary.scenarioId);
+    return scenario?.visits.find(v => v.id === visitId)?.title ?? visitId.toUpperCase();
+  }
+
   closeCompletionModal(): void {
     this.showCompletionModal = false;
+    this.completionSummary = null;
+    this.completionTwinSummary = null;
+    this.router.navigate(['/']);
   }
 
   get completionTwinLabel(): string {
@@ -290,6 +463,9 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
   }
 
   private tryOpenCompletionModal(): void {
+    if (this.blockCompletionModal) {
+      return;
+    }
     if (!this.pendingCompletedScenarioId) {
       return;
     }

@@ -397,7 +397,7 @@
       <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
         <div>
           <h5 class="mb-0">Semana tipo</h5>
-          <small class="text-muted">Distribuye porciones en desayuno, almuerzo y colaciones.</small>
+          <small class="text-muted">{{ getRequiredMealTimesLabel() }}: {{ getRequiredMealNamesLabel() }}.</small>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
           <button class="btn btn-outline-secondary btn-sm" (click)="resetMealPlan()">
@@ -478,7 +478,7 @@
           </div>
           <div class="col-lg-8 mt-4 mt-lg-0">
             <div class="meal-grid">
-              <div class="meal-column" *ngFor="let meal of dailyMealPlan.meals">
+              <div class="meal-column" *ngFor="let meal of getVisibleMeals()">
                 <div class="meal-header">
                   <h6 class="mb-0">{{ meal.title }}</h6>
                   <small class="text-muted">{{ getMealTotals(meal.id).calorias }} kcal</small>
@@ -559,6 +559,12 @@
                 <i class="fas" [class.fa-check-circle]="planCumpleMacros()" [class.fa-exclamation-circle]="!planCumpleMacros()"></i>
                 <span class="ms-2">{{ planCumpleMacros() ? 'Las porciones cumplen los macros diarios ±8%' : 'Ajusta las porciones para acercarte a los macros diarios' }}</span>
               </div>
+              <div class="alert mt-3" [class.alert-success]="hasRequiredMealTimesConfigured()" [class.alert-warning]="!hasRequiredMealTimesConfigured()">
+                <i class="fas" [class.fa-check-circle]="hasRequiredMealTimesConfigured()" [class.fa-exclamation-circle]="!hasRequiredMealTimesConfigured()"></i>
+                <span class="ms-2">
+                  {{ hasRequiredMealTimesConfigured() ? 'La cantidad obligatoria de tiempos de comida está completa.' : getMealTimeRequirementError() }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -584,7 +590,7 @@
           </div>
 
           <div class="suggestion-grid">
-            <div class="suggestion-meal-card" *ngFor="let suggestion of mealSuggestions">
+            <div class="suggestion-meal-card" *ngFor="let suggestion of getVisibleMealSuggestions()">
               <div class="suggestion-meal-header">
                 <h6 class="mb-1">{{ suggestion.mealTimeName }}</h6>
                 <small class="text-muted">
@@ -656,7 +662,7 @@
             <p class="text-muted mb-3">Primero aplicamos una distribución base de macros en un clic (equivalente a "Distribuir macros IA").</p>
             <div class="alert alert-primary mb-2">
               <i class="fas fa-bolt me-2"></i>
-              Se asignarán porciones automáticamente en desayuno, media mañana, almuerzo, colación y cena para arrancar con una pauta utilizable.
+              Se asignarán porciones automáticamente en {{ getRequiredMealNamesLabel() }} para arrancar con una pauta utilizable.
             </div>
             <div class="alert" [class]="iaHelpBaseApplied ? 'alert-success' : 'alert-light border'">
               <i class="fas" [class.fa-check-circle]="iaHelpBaseApplied" [class.fa-circle-info]="!iaHelpBaseApplied"></i>
@@ -670,10 +676,11 @@
             <div class="wizard-grid">
               <div class="wizard-question-card">
                 <label class="form-label fw-semibold">1) ¿Cuántas comidas quieres priorizar?</label>
-                <select class="form-select" [(ngModel)]="iaDistributionWizard.mealsPerDay">
+                <select class="form-select" [(ngModel)]="iaDistributionWizard.mealsPerDay" [disabled]="true">
                   <option [ngValue]="3">3 comidas principales</option>
                   <option [ngValue]="5">5 tiempos (con colaciones)</option>
                 </select>
+                <small class="text-muted d-block mt-2">Este flujo exige {{ getRequiredMealTimesLabel() }}.</small>
               </div>
 
               <div class="wizard-question-card">
@@ -704,7 +711,7 @@
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="includeSnacksCheck" [(ngModel)]="iaDistributionWizard.includeSnacks">
+                  <input class="form-check-input" type="checkbox" id="includeSnacksCheck" [(ngModel)]="iaDistributionWizard.includeSnacks" [disabled]="requiredMealTimes === 3">
                   <label class="form-check-label" for="includeSnacksCheck">
                     Incluir colaciones
                   </label>

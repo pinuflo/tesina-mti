@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { VersionMode, ScenarioPatientPreset, OrdenValidacion, FlujoTrabajo, FlujoAsignado } from '../models/nutricion.models';
 import { DataService } from './data.service';
@@ -15,6 +16,8 @@ export interface ScenarioDefinition {
   patientId: string;
   mode: VersionMode;
   description: string;
+  requiredMealTimes: 3 | 5;
+  recommendedOrder: number;
   patientPreset: ScenarioPatientPreset;
   flujoId: string;
   visits: ScenarioVisit[];
@@ -38,6 +41,14 @@ export interface ActiveScenarioProgress {
   startedAt: string;
 }
 
+interface ScenarioHistoryEntry {
+  scenarioId: ScenarioId;
+  completedVisits: string[];
+  finishedAt: string;
+  tiempoTotalMin?: number;
+  clicksTotales?: number;
+}
+
 export interface ScenarioRunSummary {
   scenarioId: ScenarioId;
   scenarioTitle: string;
@@ -46,10 +57,14 @@ export interface ScenarioRunSummary {
   mode: VersionMode;
   completedVisits: string[];
   finishedAt: string;
+  ejecucionesCompletadas: number;
   tiempoTotalMin?: number;
+  tiempoPromedioMin?: number;
   facilidadPromedio?: number;
   camposAutocompletados?: number;
   camposManuales?: number;
+  interaccionesTotal?: number;
+  clicksPromedio?: number;
   stepsCompleted: number;
   totalSteps: number;
 }
@@ -61,6 +76,8 @@ export class ScenarioService {
   private readonly STORAGE_STATE = 'scenario_states';
   private readonly STORAGE_PROGRESS = 'scenario_progress';
   private readonly STORAGE_SUMMARIES = 'scenario_summaries';
+  private readonly STORAGE_HISTORY = `${this.STORAGE_PROGRESS}_history`;
+  private activeScenarioClickCount = 0;
 
   private readonly scenarios: ScenarioDefinition[] = [
     {
@@ -70,6 +87,8 @@ export class ScenarioService {
       patientId: 'pac_manual',
       mode: 'sin-ia',
       description: 'Flujo manual tradicional para paciente A.',
+      requiredMealTimes: 3,
+      recommendedOrder: 1,
       patientPreset: {
         edad: 34,
         peso: 66,
@@ -78,7 +97,7 @@ export class ScenarioService {
         objetivo: 'perder',
         masaGrasa: 19,
         masaMagra: 47,
-        notas: 'Registrar Peso, Altura, Masa grasa/magra y objetivo "Definir plan mediterráneo 1.850 kcal".'
+        notas: 'Registrar Peso, Altura, Masa grasa/magra y objetivo "Definir plan mediterráneo 1.850 kcal". La pauta final debe quedar en 3 tiempos de comida: desayuno, almuerzo y cena.'
       },
       flujoId: 'flujo_manual_sin_ia',
       visits: this.buildStandardVisits('sin-ia')
@@ -90,6 +109,8 @@ export class ScenarioService {
       patientId: 'pac_manual',
       mode: 'con-ia',
       description: 'Flujo asistido con IA para paciente A.',
+      requiredMealTimes: 3,
+      recommendedOrder: 2,
       patientPreset: {
         edad: 34,
         peso: 66,
@@ -98,7 +119,7 @@ export class ScenarioService {
         objetivo: 'perder',
         masaGrasa: 19,
         masaMagra: 47,
-        notas: 'Registrar Peso 66 kg, Altura 167 cm, Masa grasa 19 kg, Masa magra 47 kg manualmente. IA sugiere plan y objetivos de macros.'
+        notas: 'Registrar Peso 66 kg, Altura 167 cm, Masa grasa 19 kg, Masa magra 47 kg manualmente. IA sugiere plan y objetivos de macros. La pauta final debe quedar en 3 tiempos de comida: desayuno, almuerzo y cena.'
       },
       flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
@@ -110,6 +131,8 @@ export class ScenarioService {
       patientId: 'pac_ia',
       mode: 'sin-ia',
       description: 'Flujo manual para paciente B.',
+      requiredMealTimes: 5,
+      recommendedOrder: 3,
       patientPreset: {
         edad: 41,
         peso: 82,
@@ -118,7 +141,7 @@ export class ScenarioService {
         objetivo: 'mantener',
         masaGrasa: 24,
         masaMagra: 58,
-        notas: 'Registrar antecedentes hipertensión y definir objetivo de recomposición (82kg a 79kg).'
+        notas: 'Registrar antecedentes hipertensión y definir objetivo de recomposición (82kg a 79kg). La pauta final debe quedar en 5 tiempos de comida: desayuno, media mañana, almuerzo, colación y cena.'
       },
       flujoId: 'flujo_manual_sin_ia',
       visits: this.buildStandardVisits('sin-ia')
@@ -130,6 +153,8 @@ export class ScenarioService {
       patientId: 'pac_ia',
       mode: 'con-ia',
       description: 'Flujo asistido con IA para paciente B.',
+      requiredMealTimes: 5,
+      recommendedOrder: 4,
       patientPreset: {
         edad: 41,
         peso: 82,
@@ -138,7 +163,7 @@ export class ScenarioService {
         objetivo: 'mantener',
         masaGrasa: 24,
         masaMagra: 58,
-        notas: 'Registrar Peso 82 kg, Altura 175 cm, Masa grasa 24 kg, Masa magra 58 kg manualmente. Antecedente HTA. IA sugiere objetivo 2.100 kcal.'
+        notas: 'Registrar Peso 82 kg, Altura 175 cm, Masa grasa 24 kg, Masa magra 58 kg manualmente. Antecedente HTA. IA sugiere objetivo 2.100 kcal. La pauta final debe quedar en 5 tiempos de comida: desayuno, media mañana, almuerzo, colación y cena.'
       },
       flujoId: 'flujo_asistido_ia',
       visits: this.buildStandardVisits('con-ia')
@@ -155,10 +180,12 @@ export class ScenarioService {
   scenarioSummaries$ = this.scenarioSummariesSubject.asObservable();
 
   constructor(
+    @Inject(DOCUMENT) private document: Document,
     private dataService: DataService,
     private workflowService: WorkflowService,
     private versionService: VersionService
   ) {
+    this.document.addEventListener('click', this.handleDocumentClick, true);
     this.workflowService.asignaciones$.subscribe(() => {
       this.syncProgressWithWorkflow();
     });
@@ -174,6 +201,14 @@ export class ScenarioService {
 
   getScenarios(): ScenarioDefinition[] {
     return this.scenarios;
+  }
+
+  getActiveClickCount(): number {
+    return this.activeScenarioClickCount;
+  }
+
+  getLatestAssignmentId(patientId: string, flujoId: string): string | null {
+    return this.getLatestScenarioAssignment(patientId, flujoId)?.id ?? null;
   }
 
   getCurrentScenario(): { scenario: ScenarioDefinition; progress: ActiveScenarioProgress } | null {
@@ -204,6 +239,7 @@ export class ScenarioService {
     });
 
     states[id] = 'in-progress';
+    this.activeScenarioClickCount = 0;
     const progress: ActiveScenarioProgress = {
       scenarioId: id,
       visitId: scenario.visits[0].id,
@@ -221,17 +257,19 @@ export class ScenarioService {
     states[id] = 'idle';
     this.persistStates(states);
     if (this.activeProgressSubject.value?.scenarioId === id) {
+      this.activeScenarioClickCount = 0;
       this.persistProgress(null);
     }
   }
 
   resetAllScenarios(): void {
+    this.activeScenarioClickCount = 0;
     const defaults = this.getDefaultStates();
     this.persistStates(defaults);
     this.persistProgress(null);
     this.persistSummaries(this.getSummaryDefaults());
     try {
-      localStorage.removeItem(`${this.STORAGE_PROGRESS}_history`);
+      localStorage.removeItem(this.STORAGE_HISTORY);
     } catch (error) {
       console.error('Error clearing scenario history', error);
     }
@@ -376,18 +414,26 @@ export class ScenarioService {
 
   private finishScenario(id: ScenarioId, completedVisits: string[]): void {
     const scenario = this.getScenario(id);
+    const progress = this.activeProgressSubject.value;
+    const finishedAt = new Date().toISOString();
+    const tiempoTotalMin = progress
+      ? Math.max(0, (new Date(finishedAt).getTime() - new Date(progress.startedAt).getTime()) / 60000)
+      : undefined;
+    const clicksTotales = this.activeScenarioClickCount;
     const states = { ...this.scenarioStatesSubject.value };
     states[id] = 'completed';
     this.persistStates(states);
     this.persistProgress(null);
-    const summaryKey = `${this.STORAGE_PROGRESS}_history`;
-    const history = this.loadFromStorage(summaryKey, [] as any[]);
+    const history = this.loadFromStorage(this.STORAGE_HISTORY, [] as ScenarioHistoryEntry[]);
     history.push({
       scenarioId: id,
       completedVisits,
-      finishedAt: new Date().toISOString()
+      finishedAt,
+      tiempoTotalMin,
+      clicksTotales
     });
-    this.saveToStorage(summaryKey, history);
+    this.saveToStorage(this.STORAGE_HISTORY, history);
+    this.activeScenarioClickCount = 0;
     this.captureScenarioSummary(scenario, completedVisits);
   }
 
@@ -571,6 +617,19 @@ export class ScenarioService {
       .map(e => new Date(e.fin as string).getTime())
       .sort((a, b) => b - a)[0];
 
+    const history = this.loadFromStorage(this.STORAGE_HISTORY, [] as ScenarioHistoryEntry[])
+      .filter(entry => entry.scenarioId === scenario.id);
+    const latestHistoryEntry = [...history]
+      .sort((a, b) => new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime())[0];
+
+    const ejecucionesCompletadas = assignments.length;
+    const tiempoPromedioMin = history.length > 0
+      ? history.reduce((sum, entry) => sum + (entry.tiempoTotalMin || 0), 0) / history.length
+      : undefined;
+    const clicksPromedio = history.length > 0
+      ? history.reduce((sum, entry) => sum + (entry.clicksTotales || 0), 0) / history.length
+      : undefined;
+
     const summary: ScenarioRunSummary = {
       scenarioId: scenario.id,
       scenarioTitle: scenario.title,
@@ -578,11 +637,15 @@ export class ScenarioService {
       patientName: scenario.patientName,
       mode: scenario.mode,
       completedVisits,
-      finishedAt: finishedAt ? new Date(finishedAt).toISOString() : new Date().toISOString(),
-      tiempoTotalMin: latestAssignment?.resultado?.tiempoTotalMin,
+      finishedAt: latestHistoryEntry?.finishedAt || (finishedAt ? new Date(finishedAt).toISOString() : new Date().toISOString()),
+      ejecucionesCompletadas: history.length || ejecucionesCompletadas,
+      tiempoTotalMin: latestHistoryEntry?.tiempoTotalMin ?? latestAssignment?.resultado?.tiempoTotalMin,
+      tiempoPromedioMin,
       facilidadPromedio: latestAssignment?.resultado?.facilidadPromedio,
       camposAutocompletados: latestAssignment?.resultado?.camposAutocompletadosTotal,
       camposManuales: latestAssignment?.resultado?.camposManualesTotal,
+      interaccionesTotal: latestHistoryEntry?.clicksTotales ?? latestAssignment?.resultado?.interaccionesTotal,
+      clicksPromedio,
       stepsCompleted: latestAssignment?.resultado?.pasosCompletados ?? completedVisits.length,
       totalSteps: latestAssignment?.resultado?.totalPasos ?? scenario.visits.length
     };
@@ -590,4 +653,11 @@ export class ScenarioService {
     const updated = { ...this.scenarioSummariesSubject.value, [scenario.id]: summary };
     this.persistSummaries(updated);
   }
+
+  private readonly handleDocumentClick = () => {
+    if (!this.activeProgressSubject.value) {
+      return;
+    }
+    this.activeScenarioClickCount += 1;
+  };
 }
