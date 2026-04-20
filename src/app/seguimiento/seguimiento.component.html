@@ -28,6 +28,69 @@
   </div>
 
   <!-- Selector de paciente -->
+
+  <!-- Modal: Nuevo Seguimiento -->
+  <div class="modal fade" [class.show]="showSeguimientoForm" [style.display]="showSeguimientoForm ? 'block' : 'none'"
+       tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-plus-circle me-2 text-success"></i>Nuevo Seguimiento</h5>
+          <button type="button" class="btn-close" (click)="cancelarSeguimientoForm()"></button>
+        </div>
+        <div class="modal-body">
+          <form class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Peso actual (kg) <span class="text-danger">*</span></label>
+              <input type="number" step="0.1" class="form-control"
+                     [(ngModel)]="nuevoSeguimiento.pesoFinal" name="pesoFinal"
+                     [class.is-invalid]="seguimientoFormSubmitted && nuevoSeguimiento.pesoFinal <= 0">
+              <div class="invalid-feedback">Ingresa el peso actual del paciente.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Cumplimiento dieta (%) <span class="text-danger">*</span></label>
+              <input type="number" min="0" max="100" class="form-control"
+                     [(ngModel)]="nuevoSeguimiento.cumplimientoDieta" name="cumplimientoDieta"
+                     [class.is-invalid]="seguimientoFormSubmitted && (nuevoSeguimiento.cumplimientoDieta < 0 || nuevoSeguimiento.cumplimientoDieta > 100)">
+              <div class="invalid-feedback">Debe ser entre 0 y 100.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Cumplimiento ejercicio (%) <span class="text-danger">*</span></label>
+              <input type="number" min="0" max="100" class="form-control"
+                     [(ngModel)]="nuevoSeguimiento.cumplimientoEjercicio" name="cumplimientoEjercicio"
+                     [class.is-invalid]="seguimientoFormSubmitted && (nuevoSeguimiento.cumplimientoEjercicio < 0 || nuevoSeguimiento.cumplimientoEjercicio > 100)">
+              <div class="invalid-feedback">Debe ser entre 0 y 100.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Satisfacción del paciente (1-5) <span class="text-danger">*</span></label>
+              <div class="d-flex gap-2 mt-1">
+                <button *ngFor="let n of [1,2,3,4,5]" type="button"
+                        class="btn btn-sm"
+                        [class.btn-warning]="nuevoSeguimiento.satisfaccion === n"
+                        [class.btn-outline-secondary]="nuevoSeguimiento.satisfaccion !== n"
+                        (click)="nuevoSeguimiento.satisfaccion = n">
+                  <i class="fas fa-star me-1"></i>{{ n }}
+                </button>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Observaciones</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="nuevoSeguimiento.observaciones" name="observaciones"
+                        placeholder="Notas clínicas del seguimiento..."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cancelarSeguimientoForm()">Cancelar</button>
+          <button type="button" class="btn btn-success" (click)="guardarSeguimiento()">
+            <i class="fas fa-save me-1"></i>Guardar Seguimiento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show" *ngIf="showSeguimientoForm"></div>
+
   <div class="row mb-4" *ngIf="!pacienteSeleccionado">
     <div class="col-12">
       <div class="card">

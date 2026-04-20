@@ -18,6 +18,7 @@ export class PacientesComponent implements OnInit {
   pacientes: Paciente[] = [];
   isAIEnabled = false;
   showAddForm = false;
+  formSubmitted = false;
   currentScenarioPatientId: string | null = null;
   currentScenarioPatientName: string | null = null;
   
@@ -66,6 +67,7 @@ export class PacientesComponent implements OnInit {
   }
 
   agregarPaciente() {
+    this.formSubmitted = true;
     if (this.isFormValid()) {
       this.dataService.addPaciente(this.nuevoPaciente);
       this.resetForm();
@@ -158,5 +160,6 @@ export class PacientesComponent implements OnInit {
       email: '',
       activo: true
     };
+    this.formSubmitted = false;
   }
 }

@@ -154,6 +154,127 @@ export class AnalisisComponent implements OnInit {
     return this.workflowService.getFlujoById(flujoId)?.nombre ?? flujoId;
   }
 
+  get sortedSummaries(): ScenarioRunSummary[] {
+    return [...this.scenarioSummaries].sort((a, b) => a.scenarioId.localeCompare(b.scenarioId));
+  }
+
+  get maxTiempo(): number {
+    return Math.max(...this.scenarioSummaries.map(s => s.tiempoTotalMin ?? 0), 1);
+  }
+
+  get maxClicks(): number {
+    return Math.max(...this.scenarioSummaries.map(s => s.interaccionesTotal ?? 0), 1);
+  }
+
+  get maxAutocomp(): number {
+    return Math.max(...this.scenarioSummaries.map(s => s.camposAutocompletados ?? 0), 1);
+  }
+
+  getBarPct(value: number | undefined, max: number): number {
+    if (!value || max <= 0) return 0;
+    return Math.round(Math.min((value / max) * 100, 100));
+  }
+
+  // ── Exportador ────────────────────────────────────────────────────────
+
+  exportJSON(): void {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      scenarios: this.sortedSummaries,
+      pairDeltas: this.pairGroups.map(g => ({
+        pair: g.id,
+        patient: g.label,
+        sinIA: g.s1 ? { id: g.s1id, tiempoTotalMin: g.s1.tiempoTotalMin, interaccionesTotal: g.s1.interaccionesTotal, facilidadPromedio: g.s1.facilidadPromedio } : null,
+        conIA: g.s2 ? { id: g.s2id, tiempoTotalMin: g.s2.tiempoTotalMin, interaccionesTotal: g.s2.interaccionesTotal, facilidadPromedio: g.s2.facilidadPromedio } : null,
+        delta: g.delta
+      }))
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    this._downloadBlob(blob, `resultados-ab-${this._dateTag()}.json`);
+  }
+
+  exportCSV(): void {
+    const headers = [
+      'scenarioId', 'mode', 'patientName',
+      'tiempoTotalMin', 'tiempoPromedioMin',
+      'facilidadPromedio', 'interaccionesTotal', 'clicksPromedio',
+      'camposAutocompletados', 'camposManuales',
+      'stepsCompleted', 'totalSteps', 'ejecucionesCompletadas', 'finishedAt'
+    ];
+    const rows = this.sortedSummaries.map(s => [
+      s.scenarioId, s.mode, s.patientName,
+      s.tiempoTotalMin ?? '', s.tiempoPromedioMin ?? '',
+      s.facilidadPromedio ?? '', s.interaccionesTotal ?? '', s.clicksPromedio ?? '',
+      s.camposAutocompletados ?? '', s.camposManuales ?? '',
+      s.stepsCompleted, s.totalSteps, s.ejecucionesCompletadas, s.finishedAt
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    this._downloadBlob(blob, `resultados-ab-${this._dateTag()}.csv`);
+  }
+
+  private _downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private _dateTag(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  // ── Resumen post-experimento ──────────────────────────────────────────
+
+  get studySummaryRows(): { label: string; sinIA: string; conIA: string; delta: string; positive: boolean }[] {
+    if (!this.studyComplete) return [];
+    const pairs = this.pairGroups;
+    const avg = (vals: (number | undefined)[]) => {
+      const filtered = vals.filter((v): v is number => v !== undefined);
+      return filtered.length ? filtered.reduce((a, b) => a + b, 0) / filtered.length : 0;
+    };
+    const sinIA = pairs.map(g => g.s1!);
+    const conIA = pairs.map(g => g.s2!);
+
+    const tSin = avg(sinIA.map(s => s.tiempoTotalMin));
+    const tCon = avg(conIA.map(s => s.tiempoTotalMin));
+    const cSin = avg(sinIA.map(s => s.interaccionesTotal));
+    const cCon = avg(conIA.map(s => s.interaccionesTotal));
+    const fSin = avg(sinIA.map(s => s.facilidadPromedio));
+    const fCon = avg(conIA.map(s => s.facilidadPromedio));
+    const mSin = avg(sinIA.map(s => s.camposManuales));
+    const mCon = avg(conIA.map(s => s.camposManuales));
+
+    return [
+      {
+        label: 'Tiempo promedio (min)',
+        sinIA: tSin.toFixed(1), conIA: tCon.toFixed(1),
+        delta: tSin > tCon ? `−${(tSin - tCon).toFixed(1)} min` : `+${(tCon - tSin).toFixed(1)} min`,
+        positive: tSin > tCon
+      },
+      {
+        label: 'Interacciones promedio',
+        sinIA: cSin.toFixed(0), conIA: cCon.toFixed(0),
+        delta: cSin > cCon ? `−${(cSin - cCon).toFixed(0)}` : `+${(cCon - cSin).toFixed(0)}`,
+        positive: cSin > cCon
+      },
+      {
+        label: 'Facilidad percibida (1-5)',
+        sinIA: fSin.toFixed(1), conIA: fCon.toFixed(1),
+        delta: fCon > fSin ? `+${(fCon - fSin).toFixed(1)} pts` : `−${(fSin - fCon).toFixed(1)} pts`,
+        positive: fCon > fSin
+      },
+      {
+        label: 'Campos manuales promedio',
+        sinIA: mSin.toFixed(0), conIA: mCon.toFixed(0),
+        delta: mSin > mCon ? `−${(mSin - mCon).toFixed(0)} campos` : `+${(mCon - mSin).toFixed(0)} campos`,
+        positive: mSin > mCon
+      }
+    ];
+  }
+
   private calcularMetricasFlujo() {
     const completados = this.flujosAsignados.filter(f => f.estado === 'completado' && f.resultado);
 

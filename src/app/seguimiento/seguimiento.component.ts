@@ -26,6 +26,15 @@ export class SeguimientoComponent implements OnInit {
   flujoDetalle: FlujoTrabajo | null = null;
   pasosFlujo: PasoFlujo[] = [];
   pasoEnEjecucion: PasoFlujo | null = null;
+  showSeguimientoForm = false;
+  nuevoSeguimiento = {
+    pesoFinal: 0,
+    cumplimientoDieta: 80,
+    cumplimientoEjercicio: 70,
+    satisfaccion: 3,
+    observaciones: ''
+  };
+  seguimientoFormSubmitted = false;
   feedbackPaso = {
     facilidad: 3,
     camposAutocompletados: 0,
@@ -108,31 +117,58 @@ export class SeguimientoComponent implements OnInit {
 
   agregarSeguimiento() {
     if (!this.pacienteSeleccionado) return;
-    if (!this.flujoAsignado) {
-      alert('Configura un protocolo en Inicio antes de agregar seguimientos.');
-      return;
-    }
-    
+    this.nuevoSeguimiento.pesoFinal = this.registros.length > 0 ? this.registros[0].peso : 70;
+    this.showSeguimientoForm = true;
+    this.seguimientoFormSubmitted = false;
+  }
+
+  cancelarSeguimientoForm() {
+    this.showSeguimientoForm = false;
+    this.seguimientoFormSubmitted = false;
+    this._resetSeguimientoForm();
+  }
+
+  guardarSeguimiento() {
+    this.seguimientoFormSubmitted = true;
+    if (!this.pacienteSeleccionado) return;
+    if (!this.isSeguimientoFormValid()) return;
+
     const ahora = new Date();
     const pesoActual = this.registros.length > 0 ? this.registros[0].peso : 70;
-    
+
     const seguimiento: Omit<SeguimientoMensual, 'id'> = {
       pacienteId: this.pacienteSeleccionado.id,
       mes: ahora.getMonth() + 1,
       año: ahora.getFullYear(),
       pesoInicial: pesoActual,
-      pesoFinal: pesoActual + (Math.random() * 2 - 1), // Simulación
-      cumplimientoDieta: 70 + Math.floor(Math.random() * 30),
-      cumplimientoEjercicio: 60 + Math.floor(Math.random() * 40),
-      satisfaccion: 3 + Math.floor(Math.random() * 3),
-      observaciones: 'Seguimiento registrado automáticamente',
+      pesoFinal: this.nuevoSeguimiento.pesoFinal,
+      cumplimientoDieta: this.nuevoSeguimiento.cumplimientoDieta,
+      cumplimientoEjercicio: this.nuevoSeguimiento.cumplimientoEjercicio,
+      satisfaccion: this.nuevoSeguimiento.satisfaccion,
+      observaciones: this.nuevoSeguimiento.observaciones,
       fecha: ahora
     };
-    
+
     this.dataService.addSeguimiento(seguimiento);
     this.cargarHistorial();
     this.actualizarFlujoParaPaciente(this.pacienteSeleccionado.id);
-    alert('✅ Seguimiento agregado exitosamente');
+    this.showSeguimientoForm = false;
+    this._resetSeguimientoForm();
+  }
+
+  isSeguimientoFormValid(): boolean {
+    return this.nuevoSeguimiento.pesoFinal > 0
+      && this.nuevoSeguimiento.cumplimientoDieta >= 0
+      && this.nuevoSeguimiento.cumplimientoDieta <= 100
+      && this.nuevoSeguimiento.cumplimientoEjercicio >= 0
+      && this.nuevoSeguimiento.cumplimientoEjercicio <= 100
+      && this.nuevoSeguimiento.satisfaccion >= 1
+      && this.nuevoSeguimiento.satisfaccion <= 5;
+  }
+
+  private _resetSeguimientoForm() {
+    this.nuevoSeguimiento = { pesoFinal: 0, cumplimientoDieta: 80, cumplimientoEjercicio: 70, satisfaccion: 3, observaciones: '' };
+    this.seguimientoFormSubmitted = false;
   }
 
   private actualizarFlujoParaPaciente(pacienteId: string) {

@@ -9,6 +9,14 @@
             {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
           </span>
         </h2>
+        <div class="d-flex gap-2" *ngIf="completedCount > 0">
+          <button class="btn btn-outline-secondary btn-sm" (click)="exportJSON()" title="Exportar JSON">
+            <i class="fas fa-file-code me-1"></i>JSON
+          </button>
+          <button class="btn btn-outline-success btn-sm" (click)="exportCSV()" title="Exportar CSV">
+            <i class="fas fa-file-csv me-1"></i>CSV
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -439,6 +447,259 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Gráfica comparativa visual ───────────────────────────────────────── -->
+<div class="container mt-4 mb-5" *ngIf="completedCount > 0">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-chart-bar me-2 text-primary"></i>
+        Comparativa visual por métrica
+      </h5>
+      <small class="text-muted">{{ completedCount }}/4 escenarios completados</small>
+    </div>
+    <div class="card-body">
+      <div class="row">
+
+        <!-- Tiempo total -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <div class="chart-metric-title">
+            <i class="fas fa-clock text-warning me-1"></i>
+            Tiempo total
+            <small class="text-muted ms-1">min — menor es mejor</small>
+          </div>
+          <div class="chart-bars mt-3">
+            <div class="chart-bar-row" *ngFor="let s of sortedSummaries">
+              <div class="chart-bar-label">
+                <span class="chart-scenario-badge" [class.chart-scenario-badge--ia]="s.mode === 'con-ia'">{{ s.scenarioId }}</span>
+                <span class="chart-mode-text">{{ s.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</span>
+              </div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill"
+                     [class.chart-bar-fill--ia]="s.mode === 'con-ia'"
+                     [style.width.%]="getBarPct(s.tiempoTotalMin, maxTiempo)">
+                </div>
+              </div>
+              <span class="chart-bar-value">{{ s.tiempoTotalMin ? (s.tiempoTotalMin | number:'1.0-1') : '–' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interacciones -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <div class="chart-metric-title">
+            <i class="fas fa-mouse-pointer text-info me-1"></i>
+            Interacciones
+            <small class="text-muted ms-1">clicks — menor es mejor</small>
+          </div>
+          <div class="chart-bars mt-3">
+            <div class="chart-bar-row" *ngFor="let s of sortedSummaries">
+              <div class="chart-bar-label">
+                <span class="chart-scenario-badge" [class.chart-scenario-badge--ia]="s.mode === 'con-ia'">{{ s.scenarioId }}</span>
+                <span class="chart-mode-text">{{ s.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</span>
+              </div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill"
+                     [class.chart-bar-fill--ia]="s.mode === 'con-ia'"
+                     [style.width.%]="getBarPct(s.interaccionesTotal, maxClicks)">
+                </div>
+              </div>
+              <span class="chart-bar-value">{{ s.interaccionesTotal ?? '–' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Facilidad percibida -->
+        <div class="col-md-4">
+          <div class="chart-metric-title">
+            <i class="fas fa-star text-success me-1"></i>
+            Facilidad percibida
+            <small class="text-muted ms-1">1-5 — mayor es mejor</small>
+          </div>
+          <div class="chart-bars mt-3">
+            <div class="chart-bar-row" *ngFor="let s of sortedSummaries">
+              <div class="chart-bar-label">
+                <span class="chart-scenario-badge" [class.chart-scenario-badge--ia]="s.mode === 'con-ia'">{{ s.scenarioId }}</span>
+                <span class="chart-mode-text">{{ s.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}</span>
+              </div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill chart-bar-fill--good"
+                     [class.chart-bar-fill--ia]="s.mode === 'con-ia'"
+                     [style.width.%]="getBarPct(s.facilidadPromedio, 5)">
+                </div>
+              </div>
+              <span class="chart-bar-value">{{ s.facilidadPromedio ? (s.facilidadPromedio | number:'1.0-1') + '/5' : '–' }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Campos autocompletados (fila separada, solo si hay datos Con IA) -->
+      <div class="row mt-4" *ngIf="scenarioSummaries.some(s => s.mode === 'con-ia' && s.camposAutocompletados)">
+        <div class="col-12">
+          <div class="chart-metric-title mb-3">
+            <i class="fas fa-magic text-primary me-1"></i>
+            Campos autocompletados por IA
+            <small class="text-muted ms-1">solo escenarios Con IA</small>
+          </div>
+          <div class="chart-bars">
+            <div class="chart-bar-row" *ngFor="let s of sortedSummaries">
+              <ng-container *ngIf="s.mode === 'con-ia'">
+                <div class="chart-bar-label">
+                  <span class="chart-scenario-badge chart-scenario-badge--ia">{{ s.scenarioId }}</span>
+                  <span class="chart-mode-text">Con IA</span>
+                </div>
+                <div class="chart-bar-track" style="max-width: 400px;">
+                  <div class="chart-bar-fill chart-bar-fill--ia"
+                       [style.width.%]="getBarPct(s.camposAutocompletados, maxAutocomp)">
+                  </div>
+                </div>
+                <span class="chart-bar-value">{{ s.camposAutocompletados ?? '–' }} campos</span>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <small class="text-muted d-block mt-4">
+        Las barras están normalizadas al máximo valor observado dentro de cada métrica. Azul = Con IA, Gris = Sin IA.
+      </small>
+    </div>
+  </div>
+</div>
+
+<!-- ── Resumen post-experimento ─────────────────────────────────────────── -->
+<div class="container mt-4 mb-5" *ngIf="studyComplete">
+  <div class="card summary-card">
+    <div class="card-header summary-card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-trophy me-2 text-warning"></i>
+        Resumen final del estudio A/B
+      </h5>
+      <div class="d-flex gap-2">
+        <span class="badge bg-success">
+          <i class="fas fa-check-double me-1"></i>4/4 escenarios completados
+        </span>
+        <button class="btn btn-outline-secondary btn-sm" (click)="exportJSON()">
+          <i class="fas fa-download me-1"></i>Exportar resultados
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- Tabla consolidada -->
+      <h6 class="summary-section-title">Comparativa consolidada (promedio de los 2 pares)</h6>
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered summary-table">
+          <thead>
+            <tr>
+              <th>Métrica</th>
+              <th class="text-center summary-th-siia">Sin IA (A1, B1)</th>
+              <th class="text-center summary-th-ia">Con IA (A2, B2)</th>
+              <th class="text-center">Δ Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of studySummaryRows">
+              <td class="fw-semibold">{{ row.label }}</td>
+              <td class="text-center">{{ row.sinIA }}</td>
+              <td class="text-center">{{ row.conIA }}</td>
+              <td class="text-center">
+                <span class="badge" [class.bg-success]="row.positive" [class.bg-danger]="!row.positive">
+                  {{ row.delta }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Par A -->
+      <h6 class="summary-section-title">Par A — {{ pairGroups[0]?.label }}</h6>
+      <div class="row mb-4" *ngIf="pairGroups[0] as pA">
+        <div class="col-md-5">
+          <div class="summary-scenario-block summary-scenario-block--sin">
+            <div class="summary-scenario-title">{{ pA.s1id }} — Sin IA</div>
+            <div class="summary-metrics">
+              <span><i class="fas fa-clock"></i> {{ pA.s1?.tiempoTotalMin ? (pA.s1!.tiempoTotalMin | number:'1.0-1') + ' min' : '—' }}</span>
+              <span><i class="fas fa-mouse-pointer"></i> {{ pA.s1?.interaccionesTotal ?? '—' }} clicks</span>
+              <span><i class="fas fa-star"></i> {{ pA.s1?.facilidadPromedio ? (pA.s1!.facilidadPromedio | number:'1.0-1') + '/5' : '—' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+          <div class="summary-vs" *ngIf="pA.delta as d">
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.tiempo > 0">
+              <i class="fas fa-clock"></i>
+              {{ d.tiempo > 0 ? '−' + (d.tiempo | number:'1.0-1') : '+' + (d.tiempo * -1 | number:'1.0-1') }} min
+            </div>
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.clicks > 0">
+              <i class="fas fa-mouse-pointer"></i>
+              {{ d.clicks > 0 ? '−' + d.clicks : '+' + (d.clicks * -1) }}
+            </div>
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.facilidad > 0">
+              <i class="fas fa-star"></i>
+              {{ d.facilidad > 0 ? '+' : '' }}{{ d.facilidad | number:'1.0-1' }}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="summary-scenario-block summary-scenario-block--ia">
+            <div class="summary-scenario-title">{{ pA.s2id }} — Con IA</div>
+            <div class="summary-metrics">
+              <span><i class="fas fa-clock"></i> {{ pA.s2?.tiempoTotalMin ? (pA.s2!.tiempoTotalMin | number:'1.0-1') + ' min' : '—' }}</span>
+              <span><i class="fas fa-mouse-pointer"></i> {{ pA.s2?.interaccionesTotal ?? '—' }} clicks</span>
+              <span><i class="fas fa-star"></i> {{ pA.s2?.facilidadPromedio ? (pA.s2!.facilidadPromedio | number:'1.0-1') + '/5' : '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Par B -->
+      <h6 class="summary-section-title">Par B — {{ pairGroups[1]?.label }}</h6>
+      <div class="row" *ngIf="pairGroups[1] as pB">
+        <div class="col-md-5">
+          <div class="summary-scenario-block summary-scenario-block--sin">
+            <div class="summary-scenario-title">{{ pB.s1id }} — Sin IA</div>
+            <div class="summary-metrics">
+              <span><i class="fas fa-clock"></i> {{ pB.s1?.tiempoTotalMin ? (pB.s1!.tiempoTotalMin | number:'1.0-1') + ' min' : '—' }}</span>
+              <span><i class="fas fa-mouse-pointer"></i> {{ pB.s1?.interaccionesTotal ?? '—' }} clicks</span>
+              <span><i class="fas fa-star"></i> {{ pB.s1?.facilidadPromedio ? (pB.s1!.facilidadPromedio | number:'1.0-1') + '/5' : '—' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 d-flex align-items-center justify-content-center">
+          <div class="summary-vs" *ngIf="pB.delta as d">
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.tiempo > 0">
+              <i class="fas fa-clock"></i>
+              {{ d.tiempo > 0 ? '−' + (d.tiempo | number:'1.0-1') : '+' + (d.tiempo * -1 | number:'1.0-1') }} min
+            </div>
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.clicks > 0">
+              <i class="fas fa-mouse-pointer"></i>
+              {{ d.clicks > 0 ? '−' + d.clicks : '+' + (d.clicks * -1) }}
+            </div>
+            <div class="summary-delta-chip" [class.summary-delta-chip--good]="d.facilidad > 0">
+              <i class="fas fa-star"></i>
+              {{ d.facilidad > 0 ? '+' : '' }}{{ d.facilidad | number:'1.0-1' }}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="summary-scenario-block summary-scenario-block--ia">
+            <div class="summary-scenario-title">{{ pB.s2id }} — Con IA</div>
+            <div class="summary-metrics">
+              <span><i class="fas fa-clock"></i> {{ pB.s2?.tiempoTotalMin ? (pB.s2!.tiempoTotalMin | number:'1.0-1') + ' min' : '—' }}</span>
+              <span><i class="fas fa-mouse-pointer"></i> {{ pB.s2?.interaccionesTotal ?? '—' }} clicks</span>
+              <span><i class="fas fa-star"></i> {{ pB.s2?.facilidadPromedio ? (pB.s2!.facilidadPromedio | number:'1.0-1') + '/5' : '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

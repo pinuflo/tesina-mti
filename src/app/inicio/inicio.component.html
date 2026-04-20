@@ -174,3 +174,60 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Explicación del experimento -->
+<div class="modal fade"
+     [class.show]="showExperimentModal"
+     [style.display]="showExperimentModal ? 'block' : 'none'"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="experimentModalLabel"
+     aria-modal="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white">
+        <h4 class="modal-title" id="experimentModalLabel">
+          <i class="fas fa-flask me-2"></i>
+          Bienvenido al Experimento de Evaluación
+        </h4>
+      </div>
+
+      <div class="modal-body px-4 py-4">
+        <h5 class="fw-semibold mb-3">Descripción del estudio</h5>
+        <p>
+          Este sistema forma parte de un estudio comparativo sobre el uso de herramientas de apoyo en la práctica nutricional.
+          El objetivo es evaluar de qué manera la asistencia computacional influye en la eficiencia, la calidad de la atención
+          y la experiencia del profesional durante el flujo de trabajo clínico.
+        </p>
+
+        <h5 class="fw-semibold mb-3 mt-4">¿En qué consiste tu participación?</h5>
+        <p>
+          Completarás cuatro escenarios de trabajo, cada uno con un paciente ficticio y una modalidad definida
+          (<strong>Sin IA</strong> o <strong>Con IA</strong>). Cada escenario simula una atención clínica completa:
+          evaluación nutricional, generación de pauta alimentaria y seguimiento del paciente.
+        </p>
+        <ul class="mt-2">
+          <li>Trabaja de la forma más natural posible, como lo harías en la práctica real.</li>
+          <li>No hay respuestas correctas o incorrectas; lo que se mide es el proceso, no el resultado.</li>
+          <li>Sigue las instrucciones del panel <strong>"Escenarios de Prueba"</strong> ubicado a la derecha de la pantalla.</li>
+        </ul>
+
+        <h5 class="fw-semibold mb-3 mt-4">Confidencialidad</h5>
+        <p class="mb-0">
+          Todos los datos recopilados son anónimos y se utilizarán exclusivamente con fines académicos.
+          Tu participación es voluntaria y puedes detenerte en cualquier momento.
+        </p>
+      </div>
+
+      <div class="modal-footer justify-content-center pb-4">
+        <button type="button" class="btn btn-primary btn-lg px-5" (click)="closeExperimentModal()">
+          <i class="fas fa-check-circle me-2"></i>
+          Entendido, comenzar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showExperimentModal"></div>

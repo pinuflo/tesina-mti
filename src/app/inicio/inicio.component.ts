@@ -19,7 +19,9 @@ export class InicioComponent implements OnInit, OnDestroy {
   nextScenario: ScenarioDefinition | null = null;
   lastCompletedTitle: string | null = null;
   allScenariosCompleted = false;
+  showExperimentModal = false;
   private scenarioSub: Subscription | null = null;
+  private activeProgressSub: Subscription | null = null;
 
   constructor(
     private dataService: DataService,
@@ -43,10 +45,21 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.nextScenario = pending[0] ?? null;
       this.lastCompletedTitle = completed.length > 0 ? completed[completed.length - 1].title : null;
     });
+
+    this.activeProgressSub = this.scenarioService.activeProgress$.subscribe(progress => {
+      const alreadySeen = localStorage.getItem('experiment_modal_seen') === 'true';
+      this.showExperimentModal = progress === null && !alreadySeen;
+    });
   }
 
   ngOnDestroy() {
     this.scenarioSub?.unsubscribe();
+    this.activeProgressSub?.unsubscribe();
+  }
+
+  closeExperimentModal() {
+    this.showExperimentModal = false;
+    localStorage.setItem('experiment_modal_seen', 'true');
   }
 
   getPacientesSinFlujo(): Paciente[] {

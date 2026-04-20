@@ -30,44 +30,54 @@
         <div class="card-body">
           <form class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">Nombre</label>
+              <label class="form-label">Nombre <span class="text-danger">*</span></label>
               <input type="text" 
                      class="form-control" 
                      [(ngModel)]="nuevoPaciente.nombre"
                      name="nombre"
-                     placeholder="Ingrese el nombre">
+                     placeholder="Ingrese el nombre"
+                     [class.is-invalid]="formSubmitted && !nuevoPaciente.nombre.trim()">
+              <div class="invalid-feedback">El nombre es obligatorio.</div>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Apellido</label>
+              <label class="form-label">Apellido <span class="text-danger">*</span></label>
               <input type="text" 
                      class="form-control" 
                      [(ngModel)]="nuevoPaciente.apellido"
                      name="apellido"
-                     placeholder="Ingrese el apellido">
+                     placeholder="Ingrese el apellido"
+                     [class.is-invalid]="formSubmitted && !nuevoPaciente.apellido.trim()">
+              <div class="invalid-feedback">El apellido es obligatorio.</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Edad</label>
+              <label class="form-label">Edad <span class="text-danger">*</span></label>
               <input type="number" 
                      class="form-control" 
                      [(ngModel)]="nuevoPaciente.edad"
                      name="edad"
-                     placeholder="30">
+                     placeholder="30"
+                     [class.is-invalid]="formSubmitted && nuevoPaciente.edad <= 0">
+              <div class="invalid-feedback">La edad debe ser mayor a 0.</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Teléfono</label>
+              <label class="form-label">Teléfono <span class="text-danger">*</span></label>
               <input type="tel" 
                      class="form-control" 
                      [(ngModel)]="nuevoPaciente.telefono"
                      name="telefono"
-                     placeholder="+56 9 1234 5678">
+                     placeholder="+56 9 1234 5678"
+                     [class.is-invalid]="formSubmitted && !nuevoPaciente.telefono.trim()">
+              <div class="invalid-feedback">El teléfono es obligatorio.</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Email</label>
+              <label class="form-label">Email <span class="text-danger">*</span></label>
               <input type="email" 
                      class="form-control" 
                      [(ngModel)]="nuevoPaciente.email"
                      name="email"
-                     placeholder="paciente@email.com">
+                     placeholder="paciente@email.com"
+                     [class.is-invalid]="formSubmitted && !nuevoPaciente.email.trim()">
+              <div class="invalid-feedback">El email es obligatorio.</div>
             </div>
             <div class="col-12">
               <button type="button" 
