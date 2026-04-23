@@ -8,7 +8,7 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" [routerLink]="'/'" routerLinkActive="active">Inicio</a></li>
         <li class="nav-item"><a class="nav-link" [routerLink]="'/pacientes'" routerLinkActive="active">Pacientes</a></li>
-        <li class="nav-item"><a class="nav-link" [routerLink]="'/flujos'" routerLinkActive="active">Flujos</a></li>
+        <li class="nav-item"><a class="nav-link" [routerLink]="'/flujos'" routerLinkActive="active">Protocolos</a></li>
         <li class="nav-item"><a class="nav-link" [routerLink]="'/evaluacion'" routerLinkActive="active">Evaluación</a></li>
         <li class="nav-item" *ngIf="!scenarioActive"><a class="nav-link" [routerLink]="'/analisis'" routerLinkActive="active">Análisis Nutricional</a></li>
         <li class="nav-item" *ngIf="!scenarioActive"><a class="nav-link" [routerLink]="'/seguimiento'" routerLinkActive="active">Seguimiento</a></li>
@@ -21,20 +21,20 @@
   <div class="main-panel" [class.panel-blocked]="!scenarioActive">
     <header class="panel-role panel-role-main">
       <div>
-        <p class="role-eyebrow">Ejecución clínica</p>
-        <h2>Área operativa principal</h2>
+        <p class="role-eyebrow">Área clínica</p>
+        <h2>Sistema de atención nutricional</h2>
         <small>Completa evaluación, registros y decisiones nutricionales en este espacio.</small>
       </div>
       <span class="role-state" [class.role-state-live]="scenarioActive" [class.role-state-locked]="!scenarioActive">
-        {{ scenarioActive ? 'Edición habilitada' : 'Modo lectura' }}
+        {{ scenarioActive ? 'Sesión activa' : 'En espera' }}
       </span>
     </header>
     <div class="content-wrapper">
       <div class="content-overlay" *ngIf="!scenarioActive">
         <div class="overlay-card">
           <i class="fas fa-lock overlay-lock-icon"></i>
-          <h5>Inicia el siguiente escenario</h5>
-          <p class="text-muted mb-0">El asistente del panel derecho mostrará automáticamente el próximo flujo a ejecutar.</p>
+          <h5>Selecciona una sesión para comenzar</h5>
+          <p class="text-muted mb-0">Activa una sesión desde el panel derecho para trabajar con tu paciente.</p>
         </div>
       </div>
       <div class="content-scroll">
@@ -47,9 +47,9 @@
   <aside class="wizard-panel">
     <header class="panel-role panel-role-wizard">
       <div>
-        <p class="role-eyebrow">Orquestación experimental</p>
-        <h2>Control de escenario</h2>
-        <small>Sigue el flujo activo y captura métricas comparables.</small>
+        <p class="role-eyebrow">Panel del evaluador</p>
+        <h2>Guía del estudio</h2>
+        <small>Sigue las instrucciones para cada fase de la sesión.</small>
       </div>
     </header>
     <app-scenario-wizard
@@ -71,7 +71,7 @@
     <div class="modal-content start-modal-content" *ngIf="nextScenario">
       <div class="start-modal-header">
         <div class="start-modal-top-row">
-          <span class="scenario-order-pill">Escenario {{ nextScenario.recommendedOrder }} de 4</span>
+          <span class="scenario-order-pill">Sesión {{ nextScenario.recommendedOrder }} de 4</span>
           <span class="start-mode-pill" [class.start-mode-pill--ia]="nextScenario.mode === 'con-ia'">
             {{ nextScenario.mode === 'con-ia' ? 'Con IA' : 'Sin IA' }}
           </span>
@@ -103,12 +103,12 @@
         <p class="start-modal-desc">{{ nextScenario.description }}</p>
         <div class="start-modal-lock-notice">
           <i class="fas fa-lock me-1"></i>
-          El orden de ejecución es fijo. Debes completar este escenario antes de continuar.
+          Durante la sesión activa, la navegación lateral permanece en modo consulta.
         </div>
       </div>
       <div class="start-modal-footer">
         <button class="btn btn-primary btn-lg w-100 start-btn" (click)="startNext()">
-          <i class="fas fa-play me-2"></i>Comenzar escenario
+          <i class="fas fa-play me-2"></i>Iniciar consulta
         </button>
       </div>
     </div>

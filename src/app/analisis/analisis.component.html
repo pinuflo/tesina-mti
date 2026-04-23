@@ -5,9 +5,6 @@
         <h2>
           <i class="fas fa-chart-pie me-2"></i>
           Análisis Nutricional Global
-          <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
-            {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
-          </span>
         </h2>
         <div class="d-flex gap-2" *ngIf="completedCount > 0">
           <button class="btn btn-outline-secondary btn-sm" (click)="exportJSON()" title="Exportar JSON">
@@ -64,7 +61,7 @@
         <div class="card-body">
           <i class="fas fa-robot fa-2x mb-2"></i>
           <h4>{{ estadisticas.consultasConIA }}</h4>
-          <p class="mb-0">Con IA</p>
+          <p class="mb-0">Asistidas</p>
         </div>
       </div>
     </div>
@@ -73,7 +70,7 @@
         <div class="card-body">
           <i class="fas fa-user fa-2x mb-2"></i>
           <h4>{{ estadisticas.consultasSinIA }}</h4>
-          <p class="mb-0">Sin IA</p>
+          <p class="mb-0">Estándar</p>
         </div>
       </div>
     </div>
@@ -144,13 +141,13 @@
         <div class="card-header">
           <h5 class="mb-0">
             <i [class]="isAIEnabled ? 'fas fa-robot' : 'fas fa-chart-bar'" class="me-2"></i>
-            {{ isAIEnabled ? 'Análisis Avanzado con IA' : 'Reporte Estadístico Básico' }}
+            {{ isAIEnabled ? 'Análisis con Apoyo Computacional' : 'Reporte Estadístico' }}
           </h5>
         </div>
         <div class="card-body">
           <div *ngIf="isAIEnabled; else basicAnalysis">
             <div class="alert alert-primary" role="alert">
-              <h6 class="alert-heading">🤖 Insights Generados por IA</h6>
+              <h6 class="alert-heading">Insights del análisis</h6>
               <ul class="mb-0">
                 <li><strong>Tendencia General:</strong> 
                   <span *ngIf="estadisticas.promedioIMC < 18.5">Los pacientes tienden a estar por debajo del peso ideal</span>
@@ -158,14 +155,14 @@
                   <span *ngIf="estadisticas.promedioIMC >= 25">Los pacientes tienden al sobrepeso, requieren intervención nutricional</span>
                 </li>
                 <li><strong>Patrón de Consultas:</strong> 
-                  El {{ ((estadisticas.consultasConIA / estadisticas.totalConsultas) * 100).toFixed(0) }}% de las consultas utilizan IA
+                  El {{ ((estadisticas.consultasConIA / estadisticas.totalConsultas) * 100).toFixed(0) }}% de las consultas corresponden a modalidad asistida
                 </li>
                 <li><strong>Recomendación:</strong> 
                   <span *ngIf="estadisticas.consultasConIA < estadisticas.consultasSinIA">
-                    Considerar utilizar más las herramientas de IA para optimizar resultados
+                    Considerar ampliar el uso de asistencia computacional para optimizar resultados
                   </span>
                   <span *ngIf="estadisticas.consultasConIA >= estadisticas.consultasSinIA">
-                    Excelente adopción de tecnologías de IA en el proceso nutricional
+                    Alta incorporación de asistencia computacional en el proceso nutricional
                   </span>
                 </li>
               </ul>
@@ -176,7 +173,7 @@
                 <div class="card bg-light">
                   <div class="card-body text-center">
                     <i class="fas fa-brain fa-2x text-primary mb-2"></i>
-                    <h6>Predicción IA</h6>
+                    <h6>Análisis predictivo</h6>
                     <p class="small">Basado en patrones actuales, se espera un 85% de éxito en objetivos nutricionales</p>
                   </div>
                 </div>
@@ -186,7 +183,7 @@
                   <div class="card-body text-center">
                     <i class="fas fa-target fa-2x text-success mb-2"></i>
                     <h6>Optimización</h6>
-                    <p class="small">Los algoritmos de IA han optimizado las pautas en un 30% comparado con métodos tradicionales</p>
+                    <p class="small">El apoyo computacional ha contribuido a mejorar la consistencia y personalización de las pautas</p>
                   </div>
                 </div>
               </div>
@@ -214,9 +211,9 @@
                 </ul>
               </div>
               <div class="col-md-6">
-                <h6>Distribución de Métodos</h6>
+                <h6>Distribución por modalidad</h6>
                 <div class="mb-2">
-                  <small>Consultas Sin IA</small>
+                  <small>Consultas Estándar</small>
                   <div class="progress">
                     <div class="progress-bar bg-secondary" 
                          [style.width.%]="estadisticas.totalConsultas > 0 ? (estadisticas.consultasSinIA / estadisticas.totalConsultas) * 100 : 0">
@@ -225,7 +222,7 @@
                   </div>
                 </div>
                 <div class="mb-2">
-                  <small>Consultas Con IA</small>
+                  <small>Consultas Asistidas</small>
                   <div class="progress">
                     <div class="progress-bar bg-primary" 
                          [style.width.%]="estadisticas.totalConsultas > 0 ? (estadisticas.consultasConIA / estadisticas.totalConsultas) * 100 : 0">
@@ -247,21 +244,21 @@
       <!-- ── A/B Study comparison ─────────────────────────────────────────── -->
       <div class="alert alert-secondary d-flex align-items-center gap-2" *ngIf="completedCount === 0">
         <i class="fas fa-info-circle"></i>
-        Completa al menos un flujo desde el asistente lateral para ver la comparativa A/B del estudio.
+        Completa al menos una sesión desde el panel derecho para ver el análisis comparativo.
       </div>
 
       <div class="card ab-study-card" *ngIf="completedCount > 0">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             <i class="fas fa-flask me-2 text-primary"></i>
-            Comparativa A/B del estudio
+            Comparativa de sesiones
           </h5>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-success" *ngIf="studyComplete">
               <i class="fas fa-check me-1"></i>Estudio completo
             </span>
             <span class="badge bg-warning text-dark" *ngIf="!studyComplete">
-              {{ completedCount }}/4 flujos completados
+              {{ completedCount }}/4 sesiones completadas
             </span>
           </div>
         </div>
@@ -280,7 +277,7 @@
                   <span class="badge" [class.bg-success]="!!group.s1" [class.bg-secondary]="!group.s1">
                     {{ group.s1 ? 'Completado' : 'Pendiente' }}
                   </span>
-                  <span class="ab-mode-chip">Sin IA</span>
+                  <span class="ab-mode-chip">Estándar</span>
                 </div>
                 <p class="ab-scenario-id">{{ group.s1id }}</p>
                 <div class="ab-metric-grid" *ngIf="group.s1 as s">
@@ -310,7 +307,7 @@
                   <span class="badge" [class.bg-success]="!!group.s2" [class.bg-secondary]="!group.s2">
                     {{ group.s2 ? 'Completado' : 'Pendiente' }}
                   </span>
-                  <span class="ab-mode-chip ab-mode-chip--ia">Con IA</span>
+                  <span class="ab-mode-chip ab-mode-chip--ia">Asistida</span>
                 </div>
                 <p class="ab-scenario-id">{{ group.s2id }}</p>
                 <div class="ab-metric-grid" *ngIf="group.s2 as s">
@@ -337,7 +334,7 @@
 
             <!-- Delta row -->
             <div class="ab-delta-row" *ngIf="group.delta as d">
-              <span class="ab-delta-label">Δ Con IA vs Sin IA</span>
+              <span class="ab-delta-label">Δ Asistida vs Estándar</span>
               <span class="ab-delta-chip" [class.ab-delta-positive]="d.tiempo > 0" [class.ab-delta-negative]="d.tiempo < 0" [class.ab-delta-neutral]="d.tiempo === 0">
                 <i class="fas fa-clock me-1"></i>
                 {{ d.tiempo > 0 ? (d.tiempo | number:'1.0-1') + ' min más rápido' : d.tiempo < 0 ? (d.tiempo * -1 | number:'1.0-1') + ' min más lento' : 'igual tiempo' }}
@@ -352,13 +349,13 @@
               </span>
             </div>
             <p class="text-muted small mb-0 mt-1" *ngIf="!group.delta">
-              Completa ambos flujos del par para ver la comparativa delta.
+              Completa ambas sesiones del par para ver el delta.
             </p>
 
           </div>
 
           <small class="text-muted d-block mt-3">
-            Δ positivo indica que el modo Con IA es más eficiente o mejor valorado respecto a Sin IA en el mismo paciente.
+            Δ positivo indica que la modalidad Asistida es más eficiente o mejor valorada respecto a la Estándar para el mismo paciente.
           </small>
         </div>
       </div>
@@ -372,7 +369,7 @@
         <div class="card-header">
           <h5 class="mb-0">
             <i class="fas fa-stopwatch me-2"></i>
-            Comparativa por modo (flujos del workflow)
+            Comparativa por modalidad
           </h5>
         </div>
         <div class="card-body">
@@ -380,8 +377,8 @@
             <table class="table table-sm">
               <thead>
                 <tr>
-                  <th>Modo</th>
-                  <th>Flujos</th>
+                  <th>Modalidad</th>
+                  <th>Sesiones</th>
                   <th>Tiempo (min)</th>
                   <th>Facilidad</th>
                   <th>Interacciones</th>
@@ -389,14 +386,14 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>Sin IA</td>
+                  <td>Estándar</td>
                   <td>{{ metricasFlujo.sinIA.total }}</td>
                   <td>{{ metricasFlujo.sinIA.tiempoPromedio | number:'1.0-1' }}</td>
                   <td>{{ metricasFlujo.sinIA.facilidadPromedio | number:'1.0-1' }}</td>
                   <td>{{ metricasFlujo.sinIA.interaccionesPromedio | number:'1.0-1' }}</td>
                 </tr>
                 <tr>
-                  <td>Con IA</td>
+                  <td>Asistida</td>
                   <td>{{ metricasFlujo.conIA.total }}</td>
                   <td>{{ metricasFlujo.conIA.tiempoPromedio | number:'1.0-1' }}</td>
                   <td>{{ metricasFlujo.conIA.facilidadPromedio | number:'1.0-1' }}</td>

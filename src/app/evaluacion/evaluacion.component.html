@@ -3,14 +3,14 @@
     <div class="step" [class.active]="currentStep === 1">
       <div class="index">1</div>
       <div>
-        <p class="label mb-0">Subpaso 1</p>
+        <p class="label mb-0">Paso 1</p>
         <strong>Calcular macros diarios</strong>
       </div>
     </div>
     <div class="step" [class.active]="currentStep === 2">
       <div class="index">2</div>
       <div>
-        <p class="label mb-0">Subpaso 2</p>
+        <p class="label mb-0">Paso 2</p>
         <strong>Armar pauta semanal</strong>
       </div>
     </div>
@@ -23,9 +23,6 @@
           <h2>
             <i class="fas fa-clipboard-list me-2"></i>
             Evaluación Nutricional
-            <span class="badge ms-2" [class]="isAIEnabled ? 'bg-primary' : 'bg-secondary'">
-              {{ isAIEnabled ? 'Con IA' : 'Sin IA' }}
-            </span>
           </h2>
         </div>
       </div>
@@ -115,7 +112,7 @@
                        name="masaGrasa"
                        placeholder="Ej: 18"
                        step="0.1">
-                  <small class="text-muted">Ingreso manual en ambos modos (con IA y sin IA). Permite refinar la pauta cuando hay medición clínica.</small>
+                  <small class="text-muted">Opcional. Permite refinar la distribución con medición clínica disponible.</small>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Masa magra estimada (kg)</label>
@@ -126,7 +123,7 @@
                        name="masaMagra"
                        placeholder="Ej: 50"
                        step="0.1">
-                  <small class="text-muted">Ingreso manual en ambos modos (con IA y sin IA).</small>
+                  <small class="text-muted">Opcional. Permite refinar la distribución con medición clínica disponible.</small>
               </div>
 
               <div class="col-md-6">
@@ -241,63 +238,20 @@
         </button>
       </div>
     </div>
-
-    <div class="row mt-4">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">
-              <i class="fas fa-info-circle me-2"></i>
-              Diferencias entre versiones
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <h6 class="text-secondary">
-                  <i class="fas fa-user me-2"></i>
-                  Versión Sin IA
-                </h6>
-                <ul class="list-unstyled">
-                  <li><i class="fas fa-check text-muted me-2"></i>Cálculos nutricionales básicos</li>
-                  <li><i class="fas fa-check text-muted me-2"></i>Recomendaciones generales</li>
-                  <li><i class="fas fa-check text-muted me-2"></i>Proceso manual paso a paso</li>
-                  <li><i class="fas fa-check text-muted me-2"></i>Control total del profesional</li>
-                </ul>
-              </div>
-              <div class="col-md-6">
-                <h6 class="text-primary">
-                  <i class="fas fa-robot me-2"></i>
-                  Versión Con IA
-                </h6>
-                <ul class="list-unstyled">
-                  <li><i class="fas fa-check text-primary me-2"></i>Análisis automatizado avanzado</li>
-                  <li><i class="fas fa-check text-primary me-2"></i>Recomendaciones personalizadas</li>
-                  <li><i class="fas fa-check text-primary me-2"></i>Generación automática de menús</li>
-                  <li><i class="fas fa-check text-primary me-2"></i>Predicción de resultados</li>
-                  <li><i class="fas fa-check text-primary me-2"></i>Sugerencias en tiempo real</li>
-                  <li><i class="fas fa-check text-primary me-2"></i>Optimización continua</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </ng-container>
 
   <ng-container *ngIf="currentStep === 2 && pautaNutricional.calorias > 0">
     <div class="card mb-4 step-two-toolbar">
       <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-          <p class="text-uppercase text-muted small mb-1">Subpaso 2 · Cierre de pauta</p>
+          <p class="text-uppercase text-muted small mb-1">Paso 2 · Diseño de la pauta</p>
           <h2 class="h4 mb-1">Armar pauta semanal</h2>
           <small class="text-muted">Arrastra porciones, valida macros y guarda la pauta definitiva.</small>
         </div>
         <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-outline-secondary" (click)="volverPaso1()">
             <i class="fas fa-chevron-left me-1"></i>
-            Volver al Subpaso 1
+            Volver al Paso 1
           </button>
           <button class="btn btn-success" (click)="guardarPauta()" [disabled]="!planTienePorciones()">
             <i class="fas fa-save me-1"></i>
@@ -406,7 +360,7 @@
           </button>
           <button class="btn btn-primary btn-sm" *ngIf="isAIEnabled" (click)="abrirAsistenteDistribucionIA()" [disabled]="!pautaNutricional.calorias">
             <i class="fas fa-magic me-1"></i>
-            Re-ejecutar ayuda IA
+            Recalcular distribución
           </button>
           <button
             class="btn btn-success btn-sm"

@@ -57,9 +57,9 @@
 
 .wizard-panel {
 	width: 360px;
-	border-left: 1px solid #dfe4f0;
+	border-left: 3px solid #7c3aed;
 	background: #fff;
-	box-shadow: -10px 0 30px rgba(15, 23, 42, 0.06);
+	box-shadow: -10px 0 30px rgba(109, 40, 217, 0.1);
 	display: flex;
 	flex-direction: column;
 }
@@ -98,7 +98,12 @@
 }
 
 .panel-role-wizard {
-	background: linear-gradient(90deg, #fffaf2 0%, #fff7ea 100%);
+	background: linear-gradient(90deg, #4c1d95 0%, #5b21b6 100%);
+	border-bottom-color: #6d28d9;
+
+	h2 { color: #fff; }
+	small { color: #ddd6fe; }
+	.role-eyebrow { color: #c4b5fd; }
 }
 
 .role-state {
@@ -142,9 +147,9 @@ footer {
 
 	.wizard-panel {
 		width: 100%;
-		box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
+		box-shadow: 0 -10px 30px rgba(109, 40, 217, 0.1);
 		border-left: none;
-		border-top: 1px solid #dfe4f0;
+		border-top: 3px solid #7c3aed;
 	}
 
 	.panel-role {
@@ -263,9 +268,9 @@ footer {
 
 .start-modal-lock-notice {
 	font-size: 0.78rem;
-	color: #92400e;
-	background: #fffbeb;
-	border: 1px solid #fcd34d;
+	color: #3730a3;
+	background: #eef2ff;
+	border: 1px solid #c7d2fe;
 	border-radius: 8px;
 	padding: 0.55rem 0.75rem;
 	margin-bottom: 0.5rem;
