@@ -318,6 +318,7 @@ export class ScenarioWizardComponent implements OnInit, OnDestroy {
     );
     if (!confirmed) return;
     this.scenarioService.resetAllScenarios();
+    localStorage.removeItem('sus_results');
     this.closeCompletionModal();
   }
 

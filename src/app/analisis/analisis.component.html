@@ -713,3 +713,58 @@
     </div>
   </div>
 </div>
+
+<!-- ── SUS results ───────────────────────────────────────────── -->
+<div class="container mt-4 mb-5" *ngIf="susResult">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-clipboard-check me-2 text-primary"></i>
+        Cuestionario de Usabilidad (SUS)
+      </h5>
+      <span class="badge fs-6"
+            [class.bg-success]="susResult!.score >= 71"
+            [class.bg-warning]="susResult!.score >= 52 && susResult!.score < 71"
+            [class.bg-danger]="susResult!.score < 52">
+        {{ susResult!.score | number:'1.0-1' }} — {{ susResult!.label }}
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-4 text-center">
+          <div class="display-4 fw-bold"
+               [class.text-success]="susResult!.score >= 71"
+               [class.text-warning]="susResult!.score >= 52 && susResult!.score < 71"
+               [class.text-danger]="susResult!.score < 52">
+            {{ susResult!.score | number:'1.0-1' }}
+          </div>
+          <div class="text-muted small">Puntuación SUS (0–100)</div>
+          <div class="mt-1">
+            <span class="badge bg-secondary">{{ susResult!.label }}</span>
+          </div>
+          <div class="text-muted small mt-2">
+            Completado: {{ susResult!.completedAt | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+        </div>
+        <div class="col-md-8">
+          <table class="table table-sm table-striped mb-0">
+            <thead>
+              <tr>
+                <th style="width:2rem">#</th>
+                <th>Pregunta</th>
+                <th class="text-center" style="width:5rem">Resp.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of susResult!.answers; let i = index">
+                <td class="text-muted">{{ i + 1 }}</td>
+                <td class="small">{{ susQuestionTexts[i] }}</td>
+                <td class="text-center fw-bold">{{ a }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -247,6 +247,19 @@ export class AnalisisComponent implements OnInit {
     } catch { return null; }
   }
 
+  readonly susQuestionTexts = [
+    'Creo que me gustaría usar este sistema con frecuencia.',
+    'Encontré el sistema innecesariamente complejo.',
+    'Pensé que el sistema era fácil de usar.',
+    'Creo que necesitaría el apoyo de un técnico para poder usar este sistema.',
+    'Encontré que las diversas funciones del sistema estaban bien integradas.',
+    'Pensé que había demasiada inconsistencia en este sistema.',
+    'Imagino que la mayoría de las personas aprendería a usar este sistema muy rápidamente.',
+    'Encontré el sistema muy incómodo de usar.',
+    'Me sentí muy seguro/a usando el sistema.',
+    'Necesité aprender muchas cosas antes de poder empezar a usar este sistema.'
+  ];
+
   private getSusQuestionText(index: number): string {
     const questions = [
       'Creo que me gustaría usar este sistema con frecuencia.',

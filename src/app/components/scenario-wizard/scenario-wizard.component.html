@@ -23,7 +23,12 @@
         <strong>¡Estudio completado!</strong>
         <p class="mb-0">Los 4 flujos han sido registrados.</p>
       </div>
-      <a routerLink="/analisis" class="btn btn-primary btn-sm">Ver comparativa →</a>
+      <div class="d-flex flex-column gap-2">
+        <a routerLink="/analisis" class="btn btn-primary btn-sm">Ver comparativa →</a>
+        <button class="btn btn-outline-danger btn-sm" (click)="resetAll()">
+          <i class="fas fa-redo me-1"></i>Nuevo participante
+        </button>
+      </div>
     </div>
 
     <!-- Session stepper -->
