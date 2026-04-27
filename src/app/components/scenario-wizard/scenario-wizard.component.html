@@ -107,6 +107,21 @@
         <button class="btn btn-link btn-sm text-danger p-0 align-self-start" (click)="resetScenario(currentScenario!.id)">Cancelar</button>
       </div>
 
+      <!-- Patient preset data -->
+      <div class="preset-banner" *ngIf="currentScenario?.patientPreset">
+        <p class="preset-banner-label">Datos del paciente</p>
+        <div class="preset-grid">
+          <span>Edad {{ currentScenario?.patientPreset.edad }} años</span>
+          <span>Peso {{ currentScenario?.patientPreset.peso }} kg</span>
+          <span>Altura {{ currentScenario?.patientPreset.altura }} cm</span>
+          <span>Actividad {{ currentScenario?.patientPreset.actividad | titlecase }}</span>
+          <span>Objetivo {{ currentScenario?.patientPreset.objetivo | titlecase }}</span>
+          <span *ngIf="currentScenario?.patientPreset.masaGrasa">M. grasa {{ currentScenario?.patientPreset.masaGrasa }} kg</span>
+          <span *ngIf="currentScenario?.patientPreset.masaMagra">M. magra {{ currentScenario?.patientPreset.masaMagra }} kg</span>
+        </div>
+        <small *ngIf="currentScenario?.patientPreset.notas" class="text-muted d-block mt-1">{{ currentScenario?.patientPreset.notas }}</small>
+      </div>
+
       <!-- Live metrics -->
       <div class="live-metrics">
         <div class="metric-pill">
@@ -169,21 +184,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Patient preset data -->
-      <div class="preset-banner" *ngIf="currentScenario?.patientPreset">
-        <p class="preset-banner-label">Datos del paciente</p>
-        <div class="preset-grid">
-          <span>Edad {{ currentScenario?.patientPreset.edad }} años</span>
-          <span>Peso {{ currentScenario?.patientPreset.peso }} kg</span>
-          <span>Altura {{ currentScenario?.patientPreset.altura }} cm</span>
-          <span>Actividad {{ currentScenario?.patientPreset.actividad | titlecase }}</span>
-          <span>Objetivo {{ currentScenario?.patientPreset.objetivo | titlecase }}</span>
-          <span *ngIf="currentScenario?.patientPreset.masaGrasa">M. grasa {{ currentScenario?.patientPreset.masaGrasa }} kg</span>
-          <span *ngIf="currentScenario?.patientPreset.masaMagra">M. magra {{ currentScenario?.patientPreset.masaMagra }} kg</span>
-        </div>
-        <small *ngIf="currentScenario?.patientPreset.notas" class="text-muted d-block mt-1">{{ currentScenario?.patientPreset.notas }}</small>
       </div>
 
       <div class="summary" *ngIf="!currentVisit">
