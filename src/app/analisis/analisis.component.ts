@@ -166,6 +166,10 @@ export class AnalisisComponent implements OnInit {
     return Math.max(...this.scenarioSummaries.map(s => s.interaccionesTotal ?? 0), 1);
   }
 
+  get hasAutocompletadosData(): boolean {
+    return this.scenarioSummaries.some(s => s.mode === 'con-ia' && s.camposAutocompletados);
+  }
+
   get maxAutocomp(): number {
     return Math.max(...this.scenarioSummaries.map(s => s.camposAutocompletados ?? 0), 1);
   }
