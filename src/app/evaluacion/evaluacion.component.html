@@ -531,7 +531,8 @@
               </div>
               <div class="alert mt-3" [class.alert-success]="planCumpleMacros()" [class.alert-warning]="!planCumpleMacros()">
                 <i class="fas" [class.fa-check-circle]="planCumpleMacros()" [class.fa-exclamation-circle]="!planCumpleMacros()"></i>
-                <span class="ms-2">{{ planCumpleMacros() ? 'Las porciones cumplen los macros diarios ±8%' : 'Ajusta las porciones para acercarte a los macros diarios' }}</span>
+                <span class="ms-2">{{ planCumpleMacros() ? 'Las porciones cumplen tolerancias de macros' : 'Ajusta las porciones para acercarte a los macros diarios' }}</span>
+                <small class="d-block text-muted mt-1">{{ getMacroToleranceSummary() }}</small>
               </div>
               <div class="alert mt-3" [class.alert-success]="hasRequiredMealTimesConfigured()" [class.alert-warning]="!hasRequiredMealTimesConfigured()">
                 <i class="fas" [class.fa-check-circle]="hasRequiredMealTimesConfigured()" [class.fa-exclamation-circle]="!hasRequiredMealTimesConfigured()"></i>

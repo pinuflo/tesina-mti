@@ -123,6 +123,7 @@ export class EvaluacionComponent implements OnInit {
 
   dailyMealPlan: DailyMealPlan = this.buildEmptyDailyPlan();
   private macroTolerance = 0.08;
+  private fatTolerance = 0.1;
 
   mealSuggestions: MealSuggestion[] = [];
   showMealSuggestions = false;
@@ -659,7 +660,7 @@ export class EvaluacionComponent implements OnInit {
     if (!progress.target) {
       return false;
     }
-    return Math.abs(progress.delta) <= progress.target * this.macroTolerance;
+    return Math.abs(progress.delta) <= this.getMacroAllowedDelta(macro, progress.target);
   }
 
   planCumpleMacros(): boolean {
@@ -667,10 +668,24 @@ export class EvaluacionComponent implements OnInit {
       return false;
     }
     const totals = this.getDailyTotals();
-    const dentroProte = Math.abs(this.pautaNutricional.proteinas - totals.proteinas) <= Math.max(5, this.pautaNutricional.proteinas * this.macroTolerance);
-    const dentroCarb = Math.abs(this.pautaNutricional.carbohidratos - totals.carbohidratos) <= Math.max(10, this.pautaNutricional.carbohidratos * this.macroTolerance);
-    const dentroGrasa = Math.abs(this.pautaNutricional.grasas - totals.grasas) <= Math.max(5, this.pautaNutricional.grasas * this.macroTolerance);
+    const dentroProte = Math.abs(this.pautaNutricional.proteinas - totals.proteinas) <= this.getMacroAllowedDelta('proteinas', this.pautaNutricional.proteinas);
+    const dentroCarb = Math.abs(this.pautaNutricional.carbohidratos - totals.carbohidratos) <= this.getMacroAllowedDelta('carbohidratos', this.pautaNutricional.carbohidratos);
+    const dentroGrasa = Math.abs(this.pautaNutricional.grasas - totals.grasas) <= this.getMacroAllowedDelta('grasas', this.pautaNutricional.grasas);
     return dentroProte && dentroCarb && dentroGrasa;
+  }
+
+  getMacroToleranceSummary(): string {
+    return 'Proteina: +/-8% (min 5g) · Carbohidrato: +/-8% (min 10g) · Grasa: +/-10% (min 8g)';
+  }
+
+  private getMacroAllowedDelta(macro: 'proteinas' | 'carbohidratos' | 'grasas', target: number): number {
+    if (macro === 'proteinas') {
+      return Math.max(5, target * this.macroTolerance);
+    }
+    if (macro === 'carbohidratos') {
+      return Math.max(10, target * this.macroTolerance);
+    }
+    return Math.max(8, target * this.fatTolerance);
   }
 
   resetMealPlan() {
